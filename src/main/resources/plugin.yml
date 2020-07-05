@@ -1,0 +1,9 @@
+main: io.github.jbillman.customnpc.Main
+name: customNPC
+version: 0.1
+author: Deerjump
+api-version: 1.16
+load: STARTUP
+
+commands:
+  createnpc:
