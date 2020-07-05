@@ -27,6 +27,7 @@ import net.minecraft.server.v1_16_R1.MinecraftKey;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.Packet;
 import net.minecraft.server.v1_16_R1.PacketDataSerializer;
+import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
 import net.minecraft.server.v1_16_R1.PacketPlayOutSpawnEntityLiving;
@@ -67,6 +68,7 @@ public class EntityCustom extends EntityInsentient {
    // EntityInsentient
    public static final DataWatcherObject<Byte> INSENTIENT = DataWatcherRegistry.a.a(14);
    // EntityHuman  
+   public static final DataWatcherObject<Integer> EXTRA_HEARTS = DataWatcherRegistry.b.a(14);
    public static final DataWatcherObject<Integer> SCORE = DataWatcherRegistry.b.a(15);
    public static final DataWatcherObject<Byte> SKIN_PARTS = DataWatcherRegistry.a.a(16);
    public static final DataWatcherObject<Byte> MAIN_HAND = DataWatcherRegistry.a.a(17);
@@ -104,7 +106,6 @@ public class EntityCustom extends EntityInsentient {
 
    public static <Entity extends EntityCustom> EntityTypes<Entity> register(EntityTypes.b<Entity> entity, String name,
          EntityTypes<?> model) {
-      System.out.println("EntityCustom register");
       EntityTypes<Entity> type = ENTITY_TYPE.a(ENTITY_TYPE.a(model), ResourceKey.a(IRegistry.n, MinecraftKey.a(name)),
             new EntityTypes<Entity>(entity, model.e(), true, model.b(), model.c(), model.d(), ImmutableSet.of(),
                   model.l(), model.getChunkRange(), model.getUpdateInterval()));
@@ -114,20 +115,16 @@ public class EntityCustom extends EntityInsentient {
    }
 
    public static <Entity extends EntityCustom> Entity spawn(EntityTypes<Entity> type, Location location) {
-      System.out.println("EntityCustom spawn()");
       final Entity entity = type.a(((CraftWorld) location.getWorld()).getHandle());
       entity.setPosition(location.getX(), location.getY(), location.getZ());
       entity.setYawPitch(location.getYaw(), location.getPitch());
       entity.world.addEntity(entity, CreatureSpawnEvent.SpawnReason.CUSTOM);
-      DataWatcher watcher = entity.getDataWatcher();
-      watcher.set(DataWatcherRegistry.a.a(16), (byte) 127);
       return entity;
    }
 
    protected EntityCustom(EntityTypes<? extends EntityCustom> type, World world) {
       super(type, world);
-      System.out.println("EntityCustom Constructor");
-      this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());
+      this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());      
    }
 
    public void setPing(int ping) {
@@ -159,28 +156,6 @@ public class EntityCustom extends EntityInsentient {
       setCustomName(new ChatComponentText(name));
    }
 
-   public void setSkin(String name) {
-      try {
-         URL url = new URL("https://api.mojang.com/users/profiles/minecraft/" + name);
-         InputStreamReader reader = new InputStreamReader(url.openStream());
-         String uuid = new JsonParser().parse(reader).getAsJsonObject().get("id").getAsString();
-
-         URL url2 = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid + "?unsigned=false");
-         InputStreamReader reader2 = new InputStreamReader(url2.openStream());
-
-         JsonObject property = new JsonParser().parse(reader2).getAsJsonObject().get("properties").getAsJsonArray()
-               .get(0).getAsJsonObject();
-         String texture = property.get("value").getAsString();
-         String signature = property.get("signature").getAsString();
-         setProperty(new Property("textures", texture, signature));
-
-         return;
-      } catch (Exception e) {
-         e.printStackTrace();
-         return;
-      }
-   }
-
    @Override
    public void setCustomName(IChatBaseComponent name) {
       super.setCustomName(name);
@@ -192,7 +167,7 @@ public class EntityCustom extends EntityInsentient {
       final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
       tracking.forEach(player -> player.sendPacket(packet));
    }
-
+   
    @Override
    protected void initDatawatcher() {
       
@@ -206,16 +181,9 @@ public class EntityCustom extends EntityInsentient {
       this.datawatcher.register(UNKNOWN, Optional.empty());
 
       //From EntityInsentient
-      this.datawatcher.register(INSENTIENT, (byte)0);   
-      this.datawatcher.markDirty(INSENTIENT);
-      //From EntityHuman    
-      this.datawatcher.register(SCORE, 0);      
-      this.datawatcher.register(SKIN_PARTS, (byte) 0);      
-      this.datawatcher.register(MAIN_HAND, (byte) 1);     
-      this.datawatcher.markDirty(MAIN_HAND); 
-      this.datawatcher.register(LEFT_SHOULDER_ENTITY, new NBTTagCompound());      
-      this.datawatcher.register(RIGHT_SHOULDER_ENTITY, new NBTTagCompound());     
-   
+      // this.datawatcher.register(INSENTIENT, (byte)0);  
+      if(ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
+         this.datawatcher.register(INSENTIENT, (byte)0);
    }
 
    @Override public void b(EntityPlayer player) {
@@ -233,7 +201,7 @@ public class EntityCustom extends EntityInsentient {
             final Packet<?> packet = new PacketPlayOutNamedEntitySpawn();
             packet.a(data); buffer.release();
             player.playerConnection.sendPacket(packet);
-
+            player.playerConnection.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.datawatcher, true));
          } catch (Throwable reason) { throw new RuntimeException(reason); }
    }
    
