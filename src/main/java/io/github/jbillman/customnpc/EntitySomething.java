@@ -7,7 +7,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.properties.Property;
 
-
+import net.minecraft.server.v1_16_R1.DataWatcherObject;
+import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.EntityHuman;
 import net.minecraft.server.v1_16_R1.EntityTypes;
 
@@ -18,17 +19,24 @@ import net.minecraft.server.v1_16_R1.World;
 
 public class EntitySomething extends EntityCustom {
  
+   // EntityHuman  
+   public static final DataWatcherObject<Integer> EXTRA_HEARTS = DataWatcherRegistry.b.a(14);
+   public static final DataWatcherObject<Integer> SCORE = DataWatcherRegistry.b.a(15);
+   public static final DataWatcherObject<Byte> SKIN_PARTS = DataWatcherRegistry.a.a(16);
+   public static final DataWatcherObject<Byte> MAIN_HAND = DataWatcherRegistry.a.a(17);
+   public static final DataWatcherObject<NBTTagCompound> LEFT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(18);
+   public static final DataWatcherObject<NBTTagCompound> RIGHT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(19);
+
    public EntitySomething(EntityTypes<EntitySomething> type, World world) {
       super(type, world);
 
       goalSelector.a(0, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
       goalSelector.a(0, new PathfinderGoalRandomLookaround(this));
-
-      this.datawatcher.set(SKIN_PARTS,(byte)127);
    
-      setName("jbillyman");
+      setName("Fake man");
       setSkin("jbillyman");
-      
+
+      this.datawatcher.set(new DataWatcherObject<Byte>(16, DataWatcherRegistry.a), (byte)127);
    }
 
    public void setSkin(String name) {
@@ -46,11 +54,8 @@ public class EntitySomething extends EntityCustom {
          String signature = property.get("signature").getAsString();
 
          setProperty(new Property("textures", texture, signature));
-
-         return;
       } catch (Exception e) {
          e.printStackTrace();
-         return;
       }
    }
 

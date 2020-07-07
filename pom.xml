@@ -56,7 +56,7 @@
             <artifactId>maven-jar-plugin</artifactId>
             <version>3.0.2</version>
             <configuration>
-              <outputDirectory>${basedir}/../../../My Games/Minecraft/Test Server/plugins</outputDirectory>
+              <outputDirectory>${basedir}/../../../My Games/Minecraft/Test Server/plugins/</outputDirectory>
             </configuration>
           </plugin>
           <plugin>

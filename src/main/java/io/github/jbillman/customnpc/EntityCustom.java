@@ -3,8 +3,6 @@ package io.github.jbillman.customnpc;
 import static net.minecraft.server.v1_16_R1.IRegistry.ENTITY_TYPE;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
@@ -16,7 +14,6 @@ import net.minecraft.server.v1_16_R1.AttributeDefaults;
 import net.minecraft.server.v1_16_R1.AttributeProvider;
 import net.minecraft.server.v1_16_R1.BlockPosition;
 import net.minecraft.server.v1_16_R1.ChatComponentText;
-import net.minecraft.server.v1_16_R1.DataWatcher;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.Entity;
@@ -24,7 +21,6 @@ import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import net.minecraft.server.v1_16_R1.IRegistry;
 import net.minecraft.server.v1_16_R1.MinecraftKey;
-import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.Packet;
 import net.minecraft.server.v1_16_R1.PacketDataSerializer;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
@@ -41,10 +37,8 @@ import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,14 +60,7 @@ public class EntityCustom extends EntityInsentient {
    public static final DataWatcherObject<Optional<BlockPosition>> UNKNOWN = DataWatcherRegistry.m.a(13);
    
    // EntityInsentient
-   public static final DataWatcherObject<Byte> INSENTIENT = DataWatcherRegistry.a.a(14);
-   // EntityHuman  
-   public static final DataWatcherObject<Integer> EXTRA_HEARTS = DataWatcherRegistry.b.a(14);
-   public static final DataWatcherObject<Integer> SCORE = DataWatcherRegistry.b.a(15);
-   public static final DataWatcherObject<Byte> SKIN_PARTS = DataWatcherRegistry.a.a(16);
-   public static final DataWatcherObject<Byte> MAIN_HAND = DataWatcherRegistry.a.a(17);
-   public static final DataWatcherObject<NBTTagCompound> LEFT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(18);
-   public static final DataWatcherObject<NBTTagCompound> RIGHT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(19);
+   public static final DataWatcherObject<Byte> INSENTIENT = null;
 
 
 
@@ -132,7 +119,10 @@ public class EntityCustom extends EntityInsentient {
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
       final Packet<?> packet = info(EnumPlayerInfoAction.UPDATE_LATENCY);
-      tracking.forEach(player -> player.sendPacket(packet));
+      tracking.forEach(player -> {
+         player.sendPacket(packet);
+         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+      });
    }
 
    public void setGamemode(EnumGamemode gamemode) {
@@ -140,7 +130,10 @@ public class EntityCustom extends EntityInsentient {
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
       final Packet<?> packet = info(EnumPlayerInfoAction.UPDATE_GAME_MODE);
-      tracking.forEach(player -> player.sendPacket(packet));
+      tracking.forEach(player -> {
+         player.sendPacket(packet);
+         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+      });
    }
 
    public void setProperty(Property property) {
@@ -149,7 +142,10 @@ public class EntityCustom extends EntityInsentient {
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
       final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
-      tracking.forEach(player -> player.sendPacket(packet));
+      tracking.forEach(player -> {
+         player.sendPacket(packet);
+         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+      });
    }
 
    public void setName(String name) {
@@ -165,25 +161,31 @@ public class EntityCustom extends EntityInsentient {
       profile = new GameProfile(getUniqueID(), getDisplayName().getText());
       profile.getProperties().putAll(properties);
       final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
-      tracking.forEach(player -> player.sendPacket(packet));
+      tracking.forEach(player -> {
+         player.sendPacket(packet);
+         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+      });
    }
    
    @Override
    protected void initDatawatcher() {
       
-      //From EntityLiving
-      this.datawatcher.register(HAND_STATE, (byte)0);
-      this.datawatcher.register(POTION_EFFECT_COLOR, 0);
-      this.datawatcher.register(IS_POTION_AMBIENT, false);
-      this.datawatcher.register(ARROWS, 0);
-      this.datawatcher.register(ABSORBTION_HEALTH, 0);
-      this.datawatcher.register(HEALTH, 1.0F);
-      this.datawatcher.register(UNKNOWN, Optional.empty());
+      if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) { 
+         //From EntityLiving
+         this.datawatcher.register(HAND_STATE, (byte)0);
+         this.datawatcher.register(POTION_EFFECT_COLOR, 0);
+         this.datawatcher.register(IS_POTION_AMBIENT, false);
+         this.datawatcher.register(ARROWS, 0);
+         this.datawatcher.register(ABSORBTION_HEALTH, 0);
+         this.datawatcher.register(HEALTH, 1.0F);
+         this.datawatcher.register(UNKNOWN, Optional.empty());
 
-      //From EntityInsentient
-      // this.datawatcher.register(INSENTIENT, (byte)0);  
-      if(ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
+         //From EntityInsentient
+         
+      } else {
          this.datawatcher.register(INSENTIENT, (byte)0);
+      }
+
    }
 
    @Override public void b(EntityPlayer player) {
