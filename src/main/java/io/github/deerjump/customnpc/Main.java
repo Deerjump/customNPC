@@ -1,4 +1,4 @@
-package io.github.jbillman.customnpc;
+package io.github.deerjump.customnpc;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import io.github.jbillman.customnpc.packetReader.events.Join;
+import io.github.deerjump.customnpc.events.Join;
 import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.EntityTypes;
 

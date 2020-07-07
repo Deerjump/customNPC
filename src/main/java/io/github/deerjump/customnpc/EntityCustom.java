@@ -1,7 +1,6 @@
-package io.github.jbillman.customnpc;
+package io.github.deerjump.customnpc;
 
 import static net.minecraft.server.v1_16_R1.IRegistry.ENTITY_TYPE;
-
 import com.google.common.collect.ImmutableSet;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
@@ -51,18 +50,16 @@ public class EntityCustom extends EntityInsentient {
    private static final Map<EntityTypes<?>, AttributeProvider> DEFAULT_ATTRIBUTES;
 
    // EntityLiving
-   public static final DataWatcherObject<Byte> HAND_STATE = DataWatcherRegistry.a.a(7);
-   public static final DataWatcherObject<Float> HEALTH = DataWatcherRegistry.c.a(8);
-   public static final DataWatcherObject<Integer> POTION_EFFECT_COLOR = DataWatcherRegistry.b.a(9);
-   public static final DataWatcherObject<Boolean> IS_POTION_AMBIENT = DataWatcherRegistry.i.a(10);
-   public static final DataWatcherObject<Integer> ARROWS = DataWatcherRegistry.b.a(11);
-   public static final DataWatcherObject<Integer> ABSORBTION_HEALTH = DataWatcherRegistry.b.a(12);
-   public static final DataWatcherObject<Optional<BlockPosition>> UNKNOWN = DataWatcherRegistry.m.a(13);
+   public static DataWatcherObject<Byte> HAND_STATE = DataWatcherRegistry.a.a(7);
+   public static DataWatcherObject<Float> HEALTH = DataWatcherRegistry.c.a(8);
+   public static DataWatcherObject<Integer> POTION_EFFECT_COLOR = DataWatcherRegistry.b.a(9);
+   public static DataWatcherObject<Boolean> IS_POTION_AMBIENT = DataWatcherRegistry.i.a(10);
+   public static DataWatcherObject<Integer> ARROWS = DataWatcherRegistry.b.a(11);
+   public static DataWatcherObject<Integer> ABSORBTION_HEALTH = DataWatcherRegistry.b.a(12);
+   public static DataWatcherObject<Optional<BlockPosition>> UNKNOWN = DataWatcherRegistry.m.a(13);
    
    // EntityInsentient
-   public static final DataWatcherObject<Byte> INSENTIENT = null;
-
-
+   public static DataWatcherObject<Byte> INSENTIENT = null;
 
    static {
       try {
@@ -111,7 +108,7 @@ public class EntityCustom extends EntityInsentient {
 
    protected EntityCustom(EntityTypes<? extends EntityCustom> type, World world) {
       super(type, world);
-      this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());      
+      this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());
    }
 
    public void setPing(int ping) {
@@ -121,7 +118,7 @@ public class EntityCustom extends EntityInsentient {
       final Packet<?> packet = info(EnumPlayerInfoAction.UPDATE_LATENCY);
       tracking.forEach(player -> {
          player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
 
@@ -132,7 +129,7 @@ public class EntityCustom extends EntityInsentient {
       final Packet<?> packet = info(EnumPlayerInfoAction.UPDATE_GAME_MODE);
       tracking.forEach(player -> {
          player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
 
@@ -144,7 +141,7 @@ public class EntityCustom extends EntityInsentient {
       final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
       tracking.forEach(player -> {
          player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
 
@@ -163,26 +160,25 @@ public class EntityCustom extends EntityInsentient {
       final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
       tracking.forEach(player -> {
          player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.getDataWatcher(), true));
+         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
-   
+
    @Override
    protected void initDatawatcher() {
-      
-      if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) { 
-         //From EntityLiving
-         this.datawatcher.register(HAND_STATE, (byte)0);
+
+      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) {
+         // From EntityLiving
+         this.datawatcher.register(HAND_STATE, (byte) 0);
          this.datawatcher.register(POTION_EFFECT_COLOR, 0);
          this.datawatcher.register(IS_POTION_AMBIENT, false);
          this.datawatcher.register(ARROWS, 0);
          this.datawatcher.register(ABSORBTION_HEALTH, 0);
          this.datawatcher.register(HEALTH, 1.0F);
          this.datawatcher.register(UNKNOWN, Optional.empty());
-
-         //From EntityInsentient
-         
       } else {
+         // From EntityInsentient
+         INSENTIENT = DataWatcherRegistry.a.a(7);
          this.datawatcher.register(INSENTIENT, (byte)0);
       }
 
@@ -203,7 +199,7 @@ public class EntityCustom extends EntityInsentient {
             final Packet<?> packet = new PacketPlayOutNamedEntitySpawn();
             packet.a(data); buffer.release();
             player.playerConnection.sendPacket(packet);
-            player.playerConnection.sendPacket(new PacketPlayOutEntityMetadata(this.getId(), this.datawatcher, true));
+            player.playerConnection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
          } catch (Throwable reason) { throw new RuntimeException(reason); }
    }
    

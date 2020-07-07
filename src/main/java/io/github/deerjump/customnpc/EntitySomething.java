@@ -1,4 +1,4 @@
-package io.github.jbillman.customnpc;
+package io.github.deerjump.customnpc;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -20,12 +20,12 @@ import net.minecraft.server.v1_16_R1.World;
 public class EntitySomething extends EntityCustom {
  
    // EntityHuman  
-   public static final DataWatcherObject<Integer> EXTRA_HEARTS = DataWatcherRegistry.b.a(14);
-   public static final DataWatcherObject<Integer> SCORE = DataWatcherRegistry.b.a(15);
-   public static final DataWatcherObject<Byte> SKIN_PARTS = DataWatcherRegistry.a.a(16);
-   public static final DataWatcherObject<Byte> MAIN_HAND = DataWatcherRegistry.a.a(17);
-   public static final DataWatcherObject<NBTTagCompound> LEFT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(18);
-   public static final DataWatcherObject<NBTTagCompound> RIGHT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(19);
+   public static DataWatcherObject<Float> EXTRA_HEARTS = DataWatcherRegistry.c.a(14);
+   public static DataWatcherObject<Integer> SCORE = DataWatcherRegistry.b.a(15);
+   public static DataWatcherObject<Byte> SKIN_PARTS = DataWatcherRegistry.a.a(16);
+   public static DataWatcherObject<Byte> MAIN_HAND = DataWatcherRegistry.a.a(17);
+   public static DataWatcherObject<NBTTagCompound> LEFT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(18);
+   public static DataWatcherObject<NBTTagCompound> RIGHT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(19);
 
    public EntitySomething(EntityTypes<EntitySomething> type, World world) {
       super(type, world);
@@ -63,7 +63,7 @@ public class EntitySomething extends EntityCustom {
    protected void initDatawatcher() {
       super.initDatawatcher();
 
-      this.datawatcher.register(EXTRA_HEARTS, 0);
+      this.datawatcher.register(EXTRA_HEARTS, 0.0f);
       this.datawatcher.register(SCORE, 0);      
       this.datawatcher.register(SKIN_PARTS, (byte) 0);      
       this.datawatcher.register(MAIN_HAND, (byte) 1);     
