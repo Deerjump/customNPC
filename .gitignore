@@ -7,3 +7,5 @@ target/
 .project
 customnpc.iml
 .classpath
+pom.xml
+.gitignore
