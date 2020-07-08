@@ -167,7 +167,6 @@ public class EntityCustom extends EntityInsentient {
    @Override
    protected void initDatawatcher() {
 
-      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) {
          // From EntityLiving
          this.datawatcher.register(HAND_STATE, (byte) 0);
          this.datawatcher.register(POTION_EFFECT_COLOR, 0);
@@ -176,12 +175,12 @@ public class EntityCustom extends EntityInsentient {
          this.datawatcher.register(ABSORBTION_HEALTH, 0);
          this.datawatcher.register(HEALTH, 1.0F);
          this.datawatcher.register(UNKNOWN, Optional.empty());
-      } else {
+      
          // From EntityInsentient
-         INSENTIENT = DataWatcherRegistry.a.a(7);
-         this.datawatcher.register(INSENTIENT, (byte)0);
-      }
-
+         if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) {
+            INSENTIENT = DataWatcherRegistry.a.a(14);
+            this.datawatcher.register(INSENTIENT, (byte)0);
+         }
    }
 
    @Override public void b(EntityPlayer player) {

@@ -12,7 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Entity;
 
 import io.github.deerjump.customnpc.EntityCustom;
-import io.github.deerjump.customnpc.EntitySomething;
+import io.github.deerjump.customnpc.FakePlayer;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -103,7 +103,7 @@ public class PacketReader {
       List<Entity> entityList = Bukkit.getServer().getWorlds().get(0).getEntities();
 
       Entity packetOwner = null;
-      EntitySomething entitySomething = null;
+      FakePlayer fakePlayer = null;
       int ownerId = (int) getValue(packet, "a");
       
       for(Entity entity : entityList){
@@ -112,10 +112,10 @@ public class PacketReader {
       }
 
       if(packetOwner instanceof EntityCustom)
-         entitySomething = (EntitySomething)packetOwner;
+         fakePlayer = (FakePlayer)packetOwner;
 
-      if(entitySomething != null)
-         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + entitySomething.getClass().getSimpleName() + "-------------------------");
+      if(fakePlayer != null)
+         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + fakePlayer.getClass().getSimpleName() + "-------------------------");
       else
          System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + packetOwner.getClass().getSimpleName() + "-------------------------");
       PacketPlayOutEntityMetadata metadata = (PacketPlayOutEntityMetadata)packet;
@@ -131,17 +131,17 @@ public class PacketReader {
    private void readPlayerInfo(Object packet, Player sender){
       EnumPlayerInfoAction action = (EnumPlayerInfoAction)getValue(packet, "a");
       List<PacketPlayOutPlayerInfo.PlayerInfoData> infoList = (List<PacketPlayOutPlayerInfo.PlayerInfoData>) getValue(packet, "b");
-      EntitySomething entitySomething = null;
+      FakePlayer fakePlayer = null;
 
       List<Entity> entityList = Bukkit.getServer().getWorlds().get(0).getEntities();
 
       for(Entity entity : entityList){
          if(entity instanceof EntityCustom)
-            entitySomething = (EntitySomething)entity;
+            fakePlayer = (FakePlayer)entity;
       }
 
-      if(entitySomething != null)
-         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + entitySomething.getClass().getSimpleName() + "-------------------------");
+      if(fakePlayer != null)
+         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + fakePlayer.getClass().getSimpleName() + "-------------------------");
       else
          System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + sender.getName() + "-------------------------");
       

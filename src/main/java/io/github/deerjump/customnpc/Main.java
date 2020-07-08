@@ -15,19 +15,16 @@ import net.minecraft.server.v1_16_R1.EntityTypes;
 
 public class Main extends JavaPlugin implements Listener {
 
-   EntityTypes<EntitySomething> SOMETHING;
-   EntitySomething something = null;
+   EntityTypes<FakePlayer> FAKE_PLAYER;
    EntityPlayer testPlayer = null;
       
    @Override public void onLoad() {
 
    }
 
-
-
    @Override public void onEnable() {
       Bukkit.getPluginManager().registerEvents(new Join(), this);
-      SOMETHING = EntityCustom.register(EntitySomething::new, "something", EntityTypes.PLAYER); 
+      FAKE_PLAYER = EntityCustom.register(FakePlayer::new, "something", EntityTypes.PLAYER); 
    }
 
    @Override
@@ -43,17 +40,13 @@ public class Main extends JavaPlugin implements Listener {
          location.setY(location.getY() + 1);
          
          try {
-            this.something = EntitySomething.spawn(SOMETHING, location);
+            FakePlayer entity = FakePlayer.spawn(FAKE_PLAYER, location);
          } catch (Exception e) {
             e.printStackTrace();
          }
 
       }      
       return false;
-   }
-
-   public EntitySomething getEntity(){
-      return something;
    }
 
    @Override public void onDisable() {
