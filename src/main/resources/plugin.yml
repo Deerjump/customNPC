@@ -1,9 +1,10 @@
 main: io.github.deerjump.customnpc.Main
 name: customNPC
-version: 0.1
+version: 0.2
 author: Deerjump
 api-version: 1.16
 load: STARTUP
 
 commands:
   createnpc:
+  createvillager:

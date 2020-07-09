@@ -1,4 +1,4 @@
-package io.github.deerjump.customnpc;
+package io.github.deerjump.customnpc.entity;
 
 import static net.minecraft.server.v1_16_R1.IRegistry.ENTITY_TYPE;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class EntityCustom extends EntityInsentient {
+public class EntityAbstract extends EntityInsentient {
    private static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
    private static final Field FIELD_DATA;
    private static final Map<EntityTypes<?>, AttributeProvider> DEFAULT_ATTRIBUTES;
@@ -88,7 +88,7 @@ public class EntityCustom extends EntityInsentient {
       }
    }
 
-   public static <Entity extends EntityCustom> EntityTypes<Entity> register(EntityTypes.b<Entity> entity, String name,
+   public static <Entity extends EntityAbstract> EntityTypes<Entity> register(EntityTypes.b<Entity> entity, String name,
          EntityTypes<?> model) {
       EntityTypes<Entity> type = ENTITY_TYPE.a(ENTITY_TYPE.a(model), ResourceKey.a(IRegistry.n, MinecraftKey.a(name)),
             new EntityTypes<Entity>(entity, model.e(), true, model.b(), model.c(), model.d(), ImmutableSet.of(),
@@ -98,7 +98,7 @@ public class EntityCustom extends EntityInsentient {
       return type;
    }
 
-   public static <Entity extends EntityCustom> Entity spawn(EntityTypes<Entity> type, Location location) {
+   public static <Entity extends EntityAbstract> Entity spawn(EntityTypes<Entity> type, Location location) {
       final Entity entity = type.a(((CraftWorld) location.getWorld()).getHandle());
       entity.setPosition(location.getX(), location.getY(), location.getZ());
       entity.setYawPitch(location.getYaw(), location.getPitch());
@@ -106,7 +106,7 @@ public class EntityCustom extends EntityInsentient {
       return entity;
    }
 
-   protected EntityCustom(EntityTypes<? extends EntityCustom> type, World world) {
+   protected EntityAbstract(EntityTypes<? extends EntityAbstract> type, World world) {
       super(type, world);
       this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());
    }

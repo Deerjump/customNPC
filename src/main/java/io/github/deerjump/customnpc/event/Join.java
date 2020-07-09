@@ -1,4 +1,4 @@
-package io.github.deerjump.customnpc.events;
+package io.github.deerjump.customnpc.event;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

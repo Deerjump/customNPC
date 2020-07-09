@@ -1,4 +1,4 @@
-package io.github.deerjump.customnpc;
+package io.github.deerjump.customnpc.entity.human;
 
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -6,22 +6,18 @@ import java.net.URL;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.properties.Property;
-
-import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_16_R1.inventory.CraftItemStack;
-
+import io.github.deerjump.customnpc.entity.EntityAbstract;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.EntityHuman;
 import net.minecraft.server.v1_16_R1.EntityTypes;
-import net.minecraft.server.v1_16_R1.EnumItemSlot;
-import net.minecraft.server.v1_16_R1.ItemStack;
+import net.minecraft.server.v1_16_R1.EnumGamemode;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.PathfinderGoalLookAtPlayer;
 import net.minecraft.server.v1_16_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_16_R1.World;
 
-public class FakePlayer extends EntityCustom {
+public class FakePlayer extends EntityAbstract {
  
    // From EntityHuman  
    public static DataWatcherObject<Float> EXTRA_HEARTS = DataWatcherRegistry.c.a(14);
@@ -40,6 +36,8 @@ public class FakePlayer extends EntityCustom {
    
       setName("Fake man");
       setSkin("jbillyman");
+      setGamemode(EnumGamemode.CREATIVE);
+      setInvulnerable(true);
 
       // ItemStack itemStack = CraftItemStack.asNMSCopy(new org.bukkit.inventory.ItemStack(Material.DIAMOND_SHOVEL));
       // setSlot(EnumItemSlot.MAINHAND, itemStack);

@@ -7,16 +7,20 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import io.github.deerjump.customnpc.events.Join;
-import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.EntityTypes;
+
+import io.github.deerjump.customnpc.entity.human.FakePlayer;
+import io.github.deerjump.customnpc.entity.villager.CustomVillager;
+import io.github.deerjump.customnpc.entity.EntityAbstract;
+import io.github.deerjump.customnpc.event.Join;
+
+
 
 
 public class Main extends JavaPlugin implements Listener {
 
    EntityTypes<FakePlayer> FAKE_PLAYER;
-   EntityPlayer testPlayer = null;
+   EntityTypes<CustomVillager> CUSTOM_VILLAGER;
       
    @Override public void onLoad() {
 
@@ -24,7 +28,8 @@ public class Main extends JavaPlugin implements Listener {
 
    @Override public void onEnable() {
       Bukkit.getPluginManager().registerEvents(new Join(), this);
-      FAKE_PLAYER = EntityCustom.register(FakePlayer::new, "something", EntityTypes.PLAYER); 
+      FAKE_PLAYER = EntityAbstract.register(FakePlayer::new, "player_npc", EntityTypes.PLAYER); 
+      CUSTOM_VILLAGER = EntityAbstract.register(CustomVillager::new, "villager_npc", EntityTypes.VILLAGER);
    }
 
    @Override
@@ -37,7 +42,6 @@ public class Main extends JavaPlugin implements Listener {
          Player player = (Player) sender;
 
          Location location  = player.getLocation();
-         location.setY(location.getY() + 1);
          
          try {
             FakePlayer entity = FakePlayer.spawn(FAKE_PLAYER, location);
@@ -45,7 +49,22 @@ public class Main extends JavaPlugin implements Listener {
             e.printStackTrace();
          }
 
-      }      
+      } 
+
+      if(label.equalsIgnoreCase("createvillager")){
+         if(!(sender instanceof Player)) {
+            return true;
+         }
+         Player player = (Player) sender;
+         Location location = player.getLocation();
+
+         try{
+            CustomVillager customVillager = CustomVillager.spawn(CUSTOM_VILLAGER, location);
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+
+      }     
       return false;
    }
 
