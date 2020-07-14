@@ -16,9 +16,11 @@ import net.minecraft.server.v1_16_R1.ChatComponentText;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.Entity;
+import net.minecraft.server.v1_16_R1.EntityCreature;
 import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import net.minecraft.server.v1_16_R1.IRegistry;
+import net.minecraft.server.v1_16_R1.IWorldReader;
 import net.minecraft.server.v1_16_R1.MinecraftKey;
 import net.minecraft.server.v1_16_R1.Packet;
 import net.minecraft.server.v1_16_R1.PacketDataSerializer;
@@ -35,7 +37,6 @@ import net.minecraft.server.v1_16_R1.World;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -45,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class EntityAbstract extends EntityInsentient {
+public class EntityAbstract extends EntityCreature {
    private static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
    private static final Field FIELD_DATA;
    private static final Map<EntityTypes<?>, AttributeProvider> DEFAULT_ATTRIBUTES;
@@ -76,7 +77,7 @@ public class EntityAbstract extends EntityInsentient {
       }
    }
 
-   private int removeCounter = 20;
+   private int removeCounter = 10;
    private final List<PlayerConnection> tracking = new ArrayList<>();
    private GameProfile profile;
    private EnumGamemode gamemode = EnumGamemode.SURVIVAL;

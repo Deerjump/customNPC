@@ -3,26 +3,33 @@ package io.github.deerjump.customnpc.entity.human;
 import java.io.InputStreamReader;
 import java.net.URL;
 
+import javax.annotation.Nullable;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.properties.Property;
+
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+
 import io.github.deerjump.customnpc.entity.EntityAbstract;
+import net.minecraft.server.v1_16_R1.AttributeBase;
+import net.minecraft.server.v1_16_R1.AttributeModifiable;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.EntityHuman;
+import net.minecraft.server.v1_16_R1.EntityInsentient;
 import net.minecraft.server.v1_16_R1.EntityTypes;
+import net.minecraft.server.v1_16_R1.GenericAttributes;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
-import net.minecraft.server.v1_16_R1.PathfinderGoalDoorInteract;
-import net.minecraft.server.v1_16_R1.PathfinderGoalGotoTarget;
-import net.minecraft.server.v1_16_R1.PathfinderGoalLeapAtTarget;
 import net.minecraft.server.v1_16_R1.PathfinderGoalLookAtPlayer;
 import net.minecraft.server.v1_16_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_16_R1.PathfinderGoalRandomStroll;
 import net.minecraft.server.v1_16_R1.World;
 
 public class FakePlayer extends EntityAbstract {
- 
-   // From EntityHuman  
+
+   // From EntityHuman
    public static DataWatcherObject<Float> EXTRA_HEARTS = DataWatcherRegistry.c.a(14);
    public static DataWatcherObject<Integer> SCORE = DataWatcherRegistry.b.a(15);
    public static DataWatcherObject<Byte> SKIN_PARTS = DataWatcherRegistry.a.a(16);
@@ -30,12 +37,17 @@ public class FakePlayer extends EntityAbstract {
    public static DataWatcherObject<NBTTagCompound> LEFT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(18);
    public static DataWatcherObject<NBTTagCompound> RIGHT_SHOULDER_ENTITY = DataWatcherRegistry.p.a(19);
 
+   private final double MOVE_SPEED = 0.2;
+
    public FakePlayer(EntityTypes<FakePlayer> type, World world) {
       super(type, world);
-      this.datawatcher.set(SKIN_PARTS, (byte)127);
+      this.datawatcher.set(SKIN_PARTS, (byte) 127);
+
+      this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(MOVE_SPEED);
       
-      goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
-      goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+      // goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
+      // goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+      goalSelector.a(0, new PathfinderGoalRandomStroll(this, (double)2, 5));
 
    
       setName("Fake man");
