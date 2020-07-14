@@ -8,3 +8,4 @@ load: STARTUP
 commands:
   createnpc:
   createvillager:
+  npcturn:

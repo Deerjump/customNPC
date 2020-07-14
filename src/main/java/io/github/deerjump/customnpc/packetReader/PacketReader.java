@@ -6,13 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.mojang.brigadier.arguments.BoolArgumentType;
 
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Entity;
 
+import io.github.deerjump.customnpc.Main;
 import io.github.deerjump.customnpc.entity.EntityAbstract;
 import io.github.deerjump.customnpc.entity.human.FakePlayer;
 import io.netty.channel.Channel;
@@ -22,141 +23,181 @@ import io.netty.channel.ChannelPromise;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
 import net.minecraft.server.v1_16_R1.DataWatcher.Item;
-import net.minecraft.server.v1_16_R1.PacketPlayOutEntity.PacketPlayOutEntityLook;
-import net.minecraft.server.v1_16_R1.PacketPlayOutEntity.PacketPlayOutRelEntityMove;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 
 public class PacketReader {
-   Channel channel;
+   private Channel channel;
    public static Map<UUID, Channel> channels = new HashMap<UUID, Channel>();
+   private Main plugin;
+
+   public PacketReader(Main plugin) {
+      this.plugin = plugin;
+   }
 
    public void inject(Player player) {
       CraftPlayer craftPlayer = (CraftPlayer) player;
       channel = craftPlayer.getHandle().playerConnection.networkManager.channel;
       channels.put(player.getUniqueId(), channel);
 
-      if(channel.pipeline().get("PacketInjector") != null)
+      if (channel.pipeline().get("PacketInjector") != null)
          return;
 
-      channel.pipeline().addBefore("packet_handler", "custom_handler", new ChannelDuplexHandler(){
-         
+      channel.pipeline().addBefore("packet_handler", "custom_handler", new ChannelDuplexHandler() {
+
          @Override
          public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-         try{
-            msg = checkIncoming(player, msg);
-         } catch(Exception e){
-         System.out.println("[checkIncoming]Error reading packet: " + msg.getClass().getSimpleName()+ "->"+ e);
-         }
+            try {
+               msg = checkOutgoing(player, msg);
+            } catch (Exception e) {
+               System.out.println("[checkOutgoing]Error reading packet: " + msg.getClass().getSimpleName() + "->" + e);
+            }
 
-          
-            if(msg != null)
-               super.channelRead(ctx, msg);   
+            if (msg != null)
+               super.channelRead(ctx, msg);
          }
 
          @Override
          public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-
-            try{
-               msg = checkOutgoing(player, msg);
-            } catch(Exception e){
-               System.out.println("[checkOutgoing]Error reading packet: " + msg.getClass().getSimpleName() + "->" + e);
+            try {
+               msg = checkIncoming(player, msg);
+            } catch (Exception e) {
+               System.out.println("[checkIncoming]Error reading packet: " + msg.getClass().getSimpleName() + "->" + e);
             }
 
-            if(msg != null)
-               super.write(ctx, msg, promise);
+            if (msg != null)
+               super.write(ctx, msg, promise);            
          }
       });
    }
 
    public void uninject(Player player) {
       channel = channels.get(player.getUniqueId());
-      if(channel.pipeline().get("PacketInjector") != null)
+      if (channel.pipeline().get("PacketInjector") != null)
          channel.pipeline().remove("PacketInjector");
       channels.remove(player.getUniqueId());
    }
 
+   public Object checkOutgoing(Player sender, Object packet) {
+
+      // System.out.println("Outgoing: " + packet.getClass().getSimpleName());
+
+      return packet;
+   }
+
    public Object checkIncoming(Player sender, Object packet){
-     
       // System.out.println("Incoming: " + packet.getClass().getSimpleName());
 
+      // if(packet.getClass().getSimpleName().contains("Entity"))
+         // System.out.println("----------" + packet.getClass().getSimpleName() + "----------");
 
-      return packet;
-   }
-
-   public Object checkOutgoing(Player sender, Object packet){
-      // System.out.println("Out: " + packet.getClass().getSimpleName());
-
-      if(packet.getClass().getSimpleName().equalsIgnoreCase("PacketPlayOutRelEntityMove")){
-         Field[] fields = packet.getClass().getFields();
-         System.out.println(fields[0]);
-         for(int i = 0; i < fields.length; i++)
-            System.out.println("RelEntityMove." + fields[i].getName());
-      }
+      // if(packet.getClass().getSimpleName().equalsIgnoreCase("PacketPlayOutRelEntityMove"))
          // readRelEntityMove(packet, sender);
-      if(packet.getClass().getSimpleName().equalsIgnoreCase("PacketPlayOutEntityLook")){
-         Field[] fields = packet.getClass().getFields();
-         System.out.println(fields[0]);
-         for(int i = 0; i < fields.length; i++)
-            System.out.println("EntityLook." + fields[i].getName());
-      }
+      // if(packet.getClass().getSimpleName().equalsIgnoreCase("PacketPlayOutEntityLook")){
+         // setInheritedValue(packet, "a");
          // readEntityLook(packet, sender);
+      // }
       // if(packet.getClass().getSimpleName().equalsIgnoreCase("PacketPlayOutEntityHeadRotation"))
-      //    readEntityHeadRotation(packet, sender);
+         // setValue(packet, "a");
+         // readEntityHeadRotation(packet, sender);
       return packet;
    }
 
-   private Object getValue(Object instance, String name){
+   private Object getValue(Object instance, String name) {
       Object result = null;
-      
-      for(Field field : instance.getClass().getFields())
-         System.out.println(field.getName());
 
-      try{
+      try {
          Field field = instance.getClass().getDeclaredField(name);
          field.setAccessible(true);
          result = field.get(instance);
          field.setAccessible(false);
-      } catch(Exception e) {
+      } catch (Exception e) {
          e.printStackTrace();
+      }
+
+      return result;
    }
 
-   return result;
+   private Object getInheritedValue(Object instance, String name) {
+      Object result = null;
+
+      try {
+         Field field = instance.getClass().getSuperclass().getDeclaredField(name);
+         field.setAccessible(true);
+         result = field.get(instance);
+         field.setAccessible(false);
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+
+      return result;
    }
 
+   @SuppressWarnings({"unused"})
+   private void setValue(Object instance, String name) {
+      try {
+         Field field = instance.getClass().getDeclaredField(name);
+         field.setAccessible(true);
+         field.set(instance,plugin.fakePlayer.getId());
+         field.setAccessible(false);
+      } catch (Exception e) {
+         e.printStackTrace();
+      } 
+   }
+
+   @SuppressWarnings({"unused"})
+   private void setInheritedValue(Object instance, String name){
+      try {
+         Field field = instance.getClass().getSuperclass().getDeclaredField(name);
+         field.setAccessible(true);
+         field.set(instance,plugin.fakePlayer.getId());
+         field.setAccessible(false);
+      } catch (Exception e) {
+         e.printStackTrace();
+      } 
+   }
+
+   @SuppressWarnings({"unused"})
    private void readEntityHeadRotation(Object packet, Player sender){
       int id = (int)getValue(packet, "a");
-      byte yaw = (byte)getValue(packet, "b");
+      byte headYaw = (byte)getValue(packet, "b");
       for(Entity entity: Bukkit.getWorlds().get(0).getEntities()){
          if(entity.getEntityId() == id){
-            System.out.println("------------EntityLook: " + entity.getClass().getSimpleName() + "->" + entity.getType() +"-------------");
-            System.out.println("yaw: " + yaw);
+            System.out.println("------------EntityHeadRotation: " + entity.getClass().getSimpleName() + "->" + entity.getType() +"-------------");
+            System.out.println("headYaw: " + headYaw);
+            System.out.println("yaw: " + ((CraftEntity) entity).getHandle().yaw);
+            
          }
       }
    }
 
+   @SuppressWarnings({"unused"})
    private void readRelEntityMove(Object packet, Player sender){
-      int id = (int)getValue(packet, "a");
-      short deltaX = (short)getValue(packet,"b");
-      short deltaY = (short)getValue(packet,"c");
-      short deltaZ = (short)getValue(packet,"d");
-      boolean onGround = (boolean)getValue(packet,"g");
+      int id = (int)getInheritedValue(packet, "a");
+      short deltaX = (short)getInheritedValue(packet,"b");
+      short deltaY = (short)getInheritedValue(packet,"c");
+      short deltaZ = (short)getInheritedValue(packet,"d");
+      boolean onGround = (boolean)getInheritedValue(packet,"g");
 
       for(Entity entity: Bukkit.getWorlds().get(0).getEntities()){
          if(entity.getEntityId() == id){
-            System.out.println("------------RelEntityMove: " + entity.getClass().getSimpleName() + "->" + entity.getType() + "-------------");
-            System.out.println("deltaX: " + deltaX);
-            System.out.println("deltaY: " + deltaY);
-            System.out.println("deltaZ: " + deltaZ);
-            System.out.println("onGround: " + onGround);
+            System.out.println("------------RelEntityMove: " + entity.getClass().getTypeName() + "->" + entity.getType() + "-------------");
+            
+            // System.out.println("deltaX: " + deltaX);
+            // System.out.println("deltaY: " + deltaY);
+            // System.out.println("deltaZ: " + deltaZ);
+            // System.out.println("onGround: " + onGround);
          }
       }
    }
 
+
+   
+   @SuppressWarnings({"unused"})
    private void readEntityLook(Object packet, Player sender){
-      int id = (int)getValue(packet, "a"); 
-      byte yaw = (byte)getValue(packet, "e"); 
-      byte pitch = (byte)getValue(packet, "f"); 
-      boolean onGround = (boolean)getValue(packet, "g");
+      int id = (int)getInheritedValue(packet, "a"); 
+      byte yaw = (byte)getInheritedValue(packet, "e"); 
+      byte pitch = (byte)getInheritedValue(packet, "f"); 
+      boolean onGround = (boolean)getInheritedValue(packet, "g");
 
       for(Entity entity: Bukkit.getWorlds().get(0).getEntities()){
          if(entity.getEntityId() == id){
@@ -168,6 +209,7 @@ public class PacketReader {
       }
    }
 
+   @SuppressWarnings({"unchecked", "unused"})
    private void readEntityMetadata(Object packet, Player sender){
       List<Entity> entityList = Bukkit.getServer().getWorlds().get(0).getEntities();
 
@@ -196,7 +238,7 @@ public class PacketReader {
          System.out.println(String.format("%s : %s", item.a().a(), item.b()));
 
    }
-
+   @SuppressWarnings({"unchecked", "unused"})
    private void readPlayerInfo(Object packet, Player sender){
       EnumPlayerInfoAction action = (EnumPlayerInfoAction)getValue(packet, "a");
       List<PacketPlayOutPlayerInfo.PlayerInfoData> infoList = (List<PacketPlayOutPlayerInfo.PlayerInfoData>) getValue(packet, "b");

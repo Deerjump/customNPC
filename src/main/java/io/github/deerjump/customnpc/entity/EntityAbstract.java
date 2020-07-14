@@ -35,6 +35,7 @@ import net.minecraft.server.v1_16_R1.World;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -75,6 +76,7 @@ public class EntityAbstract extends EntityInsentient {
       }
    }
 
+   private int removeCounter = 20;
    private final List<PlayerConnection> tracking = new ArrayList<>();
    private GameProfile profile;
    private EnumGamemode gamemode = EnumGamemode.SURVIVAL;
@@ -201,7 +203,18 @@ public class EntityAbstract extends EntityInsentient {
             player.playerConnection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
          } catch (Throwable reason) { throw new RuntimeException(reason); }
    }
-   
+
+   @Override
+   public void tick() {
+      if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER){
+         if(removeCounter == 0)
+            tracking.forEach(player -> player.sendPacket(info(EnumPlayerInfoAction.REMOVE_PLAYER)));
+         else
+            removeCounter--;
+      }  
+         super.tick();
+   }
+
    @Override public void c(EntityPlayer player) {
          tracking.remove(player.playerConnection);
          if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) return;

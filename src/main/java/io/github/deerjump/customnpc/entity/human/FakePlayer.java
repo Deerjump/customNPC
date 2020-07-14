@@ -11,10 +11,13 @@ import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.EntityHuman;
 import net.minecraft.server.v1_16_R1.EntityTypes;
-import net.minecraft.server.v1_16_R1.EnumGamemode;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
+import net.minecraft.server.v1_16_R1.PathfinderGoalDoorInteract;
+import net.minecraft.server.v1_16_R1.PathfinderGoalGotoTarget;
+import net.minecraft.server.v1_16_R1.PathfinderGoalLeapAtTarget;
 import net.minecraft.server.v1_16_R1.PathfinderGoalLookAtPlayer;
 import net.minecraft.server.v1_16_R1.PathfinderGoalRandomLookaround;
+import net.minecraft.server.v1_16_R1.PathfinderGoalRandomStroll;
 import net.minecraft.server.v1_16_R1.World;
 
 public class FakePlayer extends EntityAbstract {
@@ -31,19 +34,17 @@ public class FakePlayer extends EntityAbstract {
       super(type, world);
       this.datawatcher.set(SKIN_PARTS, (byte)127);
       
-      goalSelector.a(0, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
-      goalSelector.a(0, new PathfinderGoalRandomLookaround(this));
+      goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
+      goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+
    
       setName("Fake man");
       setSkin("jbillyman");
-      setGamemode(EnumGamemode.CREATIVE);
-      setInvulnerable(true);
 
       // ItemStack itemStack = CraftItemStack.asNMSCopy(new org.bukkit.inventory.ItemStack(Material.DIAMOND_SHOVEL));
       // setSlot(EnumItemSlot.MAINHAND, itemStack);
-
-    
    }
+
 
    public void setSkin(String name) {
       try {
@@ -76,6 +77,13 @@ public class FakePlayer extends EntityAbstract {
       this.datawatcher.register(RIGHT_SHOULDER_ENTITY, new NBTTagCompound());    
    }
 
+   @Override
+   public void tick() {
+      this.yaw = getHeadRotation();
+      super.tick();
+   }
+   
+
    @Override public boolean isNoAI() {
       return false;
    }
@@ -99,5 +107,4 @@ public class FakePlayer extends EntityAbstract {
    @Override public void setLeftHanded(boolean flag) {
       return;
    }
-   
 }
