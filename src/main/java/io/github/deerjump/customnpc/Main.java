@@ -4,12 +4,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.EntityTypes;
 import io.github.deerjump.customnpc.entity.human.FakePlayer;
 import io.github.deerjump.customnpc.entity.villager.CustomVillager;
@@ -46,22 +44,8 @@ public class Main extends JavaPlugin implements Listener {
          Player player = (Player) sender;
 
          Location location  = player.getLocation();
-         
-         try {
-            fakePlayer = FakePlayer.spawn(FAKE_PLAYER, location);
-            
-         } catch (Exception e) {
-            e.printStackTrace();
-         }
-
+         FakePlayer.spawn(FAKE_PLAYER, location);
       } 
-
-      if(label.equalsIgnoreCase("npcturn")){
-         if(!(sender instanceof Player))
-            return true;
-         Player player = (Player) sender;
-         EntityPlayer handle = ((CraftPlayer)player).getHandle();
-      }
 
       if(label.equalsIgnoreCase("createvillager")){
          if(!(sender instanceof Player)) {
@@ -70,12 +54,7 @@ public class Main extends JavaPlugin implements Listener {
          Player player = (Player) sender;
          Location location = player.getLocation();
 
-         try{
-            CustomVillager customVillager = CustomVillager.spawn(CUSTOM_VILLAGER, location);
-         } catch (Exception e) {
-            e.printStackTrace();
-         }
-
+         CustomVillager.spawn(CUSTOM_VILLAGER, location);
       }     
       return false;
    }
