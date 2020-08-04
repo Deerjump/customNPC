@@ -3,15 +3,14 @@ package io.github.deerjump.customnpc.entity.human;
 import java.io.InputStreamReader;
 import java.net.URL;
 
-
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.properties.Property;
 
-
 import io.github.deerjump.customnpc.entity.EntityAbstract;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
+import net.minecraft.server.v1_16_R1.EntityHuman;
 import net.minecraft.server.v1_16_R1.EntityTypes;
 import net.minecraft.server.v1_16_R1.GenericAttributes;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
@@ -37,12 +36,12 @@ public class FakePlayer extends EntityAbstract {
 
       this.datawatcher.set(SKIN_PARTS, (byte) 127);
       this.getAttributeInstance(GenericAttributes.MOVEMENT_SPEED).setValue(MOVE_SPEED);
-      // goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
-      // goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
+      goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
+      goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
       goalSelector.a(0, new PathfinderGoalRandomStroll(this, (double)2, 5));
    
-      setName("Fake Player");
-      setSkin("Shortshrimp");
+      // setName("Fake Player");
+      // setSkin("Shortshrimp");
    }
 
    public void setSkin(String name) {

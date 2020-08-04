@@ -21,6 +21,7 @@ import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import net.minecraft.server.v1_16_R1.IRegistry;
 import net.minecraft.server.v1_16_R1.MinecraftKey;
+import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.Packet;
 import net.minecraft.server.v1_16_R1.PacketDataSerializer;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
@@ -44,6 +45,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import javax.annotation.OverridingMethodsMustInvokeSuper;
 
 public class EntityAbstract extends EntityCreature {
    private static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
@@ -69,7 +72,7 @@ public class EntityAbstract extends EntityCreature {
          final Field field = AttributeDefaults.class.getDeclaredField("b");
          modifiers.setInt(field, modifiers.getInt(field) & ~Modifier.FINAL);
          field.setAccessible(true);
-         DEFAULT_ATTRIBUTES = new HashMap((Map<EntityTypes<?>, AttributeProvider>) field.get(null));
+         DEFAULT_ATTRIBUTES = new HashMap<>((Map<EntityTypes<?>, AttributeProvider>) field.get(null));
          field.set(null, DEFAULT_ATTRIBUTES);
       } catch (Throwable reason) {
          throw new RuntimeException(reason);
@@ -79,8 +82,8 @@ public class EntityAbstract extends EntityCreature {
    private int removeCounter = 10;
    private final List<PlayerConnection> tracking = new ArrayList<>();
    private GameProfile profile;
-   private EnumGamemode gamemode = EnumGamemode.SURVIVAL;
-   private int ping = 0;
+   private Property skin;
+   private int ping = -1;
 
    static {
       try {
@@ -113,11 +116,45 @@ public class EntityAbstract extends EntityCreature {
       this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());
    }
 
+   @Override
+   protected void initDatawatcher() {
+
+         // From EntityLiving
+         this.datawatcher.register(HAND_STATE, (byte) 0);
+         this.datawatcher.register(POTION_EFFECT_COLOR, 0);
+         this.datawatcher.register(IS_POTION_AMBIENT, false);
+         this.datawatcher.register(ARROWS, 0);
+         this.datawatcher.register(ABSORBTION_HEALTH, 0);
+         this.datawatcher.register(HEALTH, 1.0F);
+         this.datawatcher.register(UNKNOWN, Optional.empty());
+      
+         // From EntityInsentient
+         if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) {
+            INSENTIENT = DataWatcherRegistry.a.a(14);
+            this.datawatcher.register(INSENTIENT, (byte)0);
+         }
+   }
+
+   @Override
+   @OverridingMethodsMustInvokeSuper
+   public void saveData(NBTTagCompound nbttagcompound) {
+      super.saveData(nbttagcompound);
+      
+   }
+
+   @Override
+   @OverridingMethodsMustInvokeSuper
+   public void loadData(NBTTagCompound nbttagcompound) {
+      super.loadData(nbttagcompound); 
+      
+   
+   }
+
    public void setPing(int ping) {
       this.ping = ping;
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
-      final Packet<?> packet = info(EnumPlayerInfoAction.UPDATE_LATENCY);
+      final Packet<?> packet = info(true);
       tracking.forEach(player -> {
          player.sendPacket(packet);
          player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
@@ -125,10 +162,11 @@ public class EntityAbstract extends EntityCreature {
    }
 
    public void setGamemode(EnumGamemode gamemode) {
-      this.gamemode = gamemode;
+      // this.gamemode = gamemode;
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
-      final Packet<?> packet = info(EnumPlayerInfoAction.UPDATE_GAME_MODE);
+      final Packet<?> packet = info(true);
+      removeCounter = 5;
       tracking.forEach(player -> {
          player.sendPacket(packet);
          player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
@@ -140,7 +178,7 @@ public class EntityAbstract extends EntityCreature {
       profile.getProperties().put(property.getName(), property);
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
-      final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
+      final Packet<?> packet = info(true);
       tracking.forEach(player -> {
          player.sendPacket(packet);
          player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
@@ -159,30 +197,11 @@ public class EntityAbstract extends EntityCreature {
       final PropertyMap properties = profile.getProperties();
       profile = new GameProfile(getUniqueID(), getDisplayName().getText());
       profile.getProperties().putAll(properties);
-      final Packet<?> packet = info(EnumPlayerInfoAction.ADD_PLAYER);
+      final Packet<?> packet = info(true);
       tracking.forEach(player -> {
          player.sendPacket(packet);
          player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
-   }
-
-   @Override
-   protected void initDatawatcher() {
-
-         // From EntityLiving
-         this.datawatcher.register(HAND_STATE, (byte) 0);
-         this.datawatcher.register(POTION_EFFECT_COLOR, 0);
-         this.datawatcher.register(IS_POTION_AMBIENT, false);
-         this.datawatcher.register(ARROWS, 0);
-         this.datawatcher.register(ABSORBTION_HEALTH, 0);
-         this.datawatcher.register(HEALTH, 1.0F);
-         this.datawatcher.register(UNKNOWN, Optional.empty());
-      
-         // From EntityInsentient
-         if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) {
-            INSENTIENT = DataWatcherRegistry.a.a(14);
-            this.datawatcher.register(INSENTIENT, (byte)0);
-         }
    }
 
    @Override public void b(EntityPlayer player) {
@@ -208,7 +227,7 @@ public class EntityAbstract extends EntityCreature {
    public void tick() {
       if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER){
          if(removeCounter == 0)
-            tracking.forEach(player -> player.sendPacket(info(EnumPlayerInfoAction.REMOVE_PLAYER)));
+            tracking.forEach(player -> player.sendPacket(info(false)));
          else
             removeCounter--;
       }  
@@ -218,21 +237,21 @@ public class EntityAbstract extends EntityCreature {
    @Override public void c(EntityPlayer player) {
          tracking.remove(player.playerConnection);
          if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) return;
-         player.playerConnection.sendPacket(info(EnumPlayerInfoAction.REMOVE_PLAYER));
+         player.playerConnection.sendPacket(info(false));
    }
 
    @Override public Packet<?> O() {
          if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER)
-            return info(EnumPlayerInfoAction.ADD_PLAYER); 
+            return info(true); 
          return new PacketPlayOutSpawnEntityLiving(this);
    }
-   
+
    @SuppressWarnings("unchecked")
-   private PacketPlayOutPlayerInfo info(EnumPlayerInfoAction action) {
+   private PacketPlayOutPlayerInfo info(boolean add) {
          try {
-            final PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(action);
+            final PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(add ? EnumPlayerInfoAction.ADD_PLAYER : EnumPlayerInfoAction.REMOVE_PLAYER);
             ((List<PacketPlayOutPlayerInfo.PlayerInfoData>) FIELD_DATA.get(packet)).add(packet.new PlayerInfoData(
-               profile, ping, gamemode, getDisplayName()
+               profile, ping, EnumGamemode.SURVIVAL, getDisplayName()
             ));
             return packet;
          } catch (Throwable reason) { throw new RuntimeException(reason); }
