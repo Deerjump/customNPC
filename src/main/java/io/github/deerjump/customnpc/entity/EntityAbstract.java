@@ -34,8 +34,10 @@ import net.minecraft.server.v1_16_R1.EnumGamemode;
 import net.minecraft.server.v1_16_R1.ResourceKey;
 import net.minecraft.server.v1_16_R1.World;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 import java.lang.reflect.Field;
@@ -80,7 +82,6 @@ public class EntityAbstract extends EntityCreature {
    }
 
    private int removeCounter = 10;
-   private final List<PlayerConnection> tracking = new ArrayList<>();
    private GameProfile profile;
    private Property skin;
    private int ping = -1;
@@ -155,21 +156,10 @@ public class EntityAbstract extends EntityCreature {
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
       final Packet<?> packet = info(true);
-      tracking.forEach(player -> {
-         player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
-      });
-   }
-
-   public void setGamemode(EnumGamemode gamemode) {
-      // this.gamemode = gamemode;
-      if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
-         return;
-      final Packet<?> packet = info(true);
-      removeCounter = 5;
-      tracking.forEach(player -> {
-         player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
+      Bukkit.getOnlinePlayers().forEach(player -> {
+         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+         connection.sendPacket(packet);
+         connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
 
@@ -179,9 +169,10 @@ public class EntityAbstract extends EntityCreature {
       if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
          return;
       final Packet<?> packet = info(true);
-      tracking.forEach(player -> {
-         player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
+      Bukkit.getOnlinePlayers().forEach(player -> {
+         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+         connection.sendPacket(packet);
+         connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
 
@@ -198,14 +189,14 @@ public class EntityAbstract extends EntityCreature {
       profile = new GameProfile(getUniqueID(), getDisplayName().getText());
       profile.getProperties().putAll(properties);
       final Packet<?> packet = info(true);
-      tracking.forEach(player -> {
-         player.sendPacket(packet);
-         player.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
+      Bukkit.getOnlinePlayers().forEach(player -> {
+         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+         connection.sendPacket(packet);
+         connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
       });
    }
 
    @Override public void b(EntityPlayer player) {
-         tracking.add(player.playerConnection);
          final ByteBuf buffer = Unpooled.buffer();
          if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) try {
             final PacketDataSerializer data = new PacketDataSerializer(buffer);
@@ -218,8 +209,11 @@ public class EntityAbstract extends EntityCreature {
             data.writeByte((byte)((int)(pitch * 256.0F / 360.0F)));
             final Packet<?> packet = new PacketPlayOutNamedEntitySpawn();
             packet.a(data); buffer.release();
-            player.playerConnection.sendPacket(packet);
-            player.playerConnection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
+            Bukkit.getOnlinePlayers().forEach(oPlayer -> {          
+               PlayerConnection connection = ((CraftPlayer) oPlayer).getHandle().playerConnection;
+               connection.sendPacket(packet);
+               connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
+            });
          } catch (Throwable reason) { throw new RuntimeException(reason); }
    }
 
@@ -227,15 +221,14 @@ public class EntityAbstract extends EntityCreature {
    public void tick() {
       if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER){
          if(removeCounter == 0)
-            tracking.forEach(player -> player.sendPacket(info(false)));
-         else
+            Bukkit.getOnlinePlayers().forEach(player -> ((CraftPlayer)player).getHandle().playerConnection.sendPacket(info(false)));
+         if(removeCounter >= 0)
             removeCounter--;
       }  
          super.tick();
    }
 
    @Override public void c(EntityPlayer player) {
-         tracking.remove(player.playerConnection);
          if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) return;
          player.playerConnection.sendPacket(info(false));
    }
@@ -249,6 +242,7 @@ public class EntityAbstract extends EntityCreature {
    @SuppressWarnings("unchecked")
    private PacketPlayOutPlayerInfo info(boolean add) {
          try {
+            removeCounter = add ? 5 : 0;
             final PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(add ? EnumPlayerInfoAction.ADD_PLAYER : EnumPlayerInfoAction.REMOVE_PLAYER);
             ((List<PacketPlayOutPlayerInfo.PlayerInfoData>) FIELD_DATA.get(packet)).add(packet.new PlayerInfoData(
                profile, ping, EnumGamemode.SURVIVAL, getDisplayName()
