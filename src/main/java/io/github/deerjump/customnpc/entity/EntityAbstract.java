@@ -1,23 +1,40 @@
 package io.github.deerjump.customnpc.entity;
 
 import static net.minecraft.server.v1_16_R1.IRegistry.ENTITY_TYPE;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.annotation.OverridingMethodsMustInvokeSuper;
+
 import com.google.common.collect.ImmutableSet;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.properties.PropertyMap;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import net.minecraft.server.v1_16_R1.EntityTypes;
-import net.minecraft.server.v1_16_R1.EntityInsentient;
 import net.minecraft.server.v1_16_R1.AttributeDefaults;
 import net.minecraft.server.v1_16_R1.AttributeProvider;
 import net.minecraft.server.v1_16_R1.BlockPosition;
 import net.minecraft.server.v1_16_R1.ChatComponentText;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
-import net.minecraft.server.v1_16_R1.Entity;
 import net.minecraft.server.v1_16_R1.EntityCreature;
+import net.minecraft.server.v1_16_R1.EntityInsentient;
 import net.minecraft.server.v1_16_R1.EntityPlayer;
+import net.minecraft.server.v1_16_R1.EntityPose;
+import net.minecraft.server.v1_16_R1.EntityTypes;
+import net.minecraft.server.v1_16_R1.EnumGamemode;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import net.minecraft.server.v1_16_R1.IRegistry;
 import net.minecraft.server.v1_16_R1.MinecraftKey;
@@ -27,33 +44,27 @@ import net.minecraft.server.v1_16_R1.PacketDataSerializer;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 import net.minecraft.server.v1_16_R1.PacketPlayOutSpawnEntityLiving;
 import net.minecraft.server.v1_16_R1.PlayerConnection;
-import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
-import net.minecraft.server.v1_16_R1.EnumGamemode;
 import net.minecraft.server.v1_16_R1.ResourceKey;
+import net.minecraft.server.v1_16_R1.ScoreboardTeam;
 import net.minecraft.server.v1_16_R1.World;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.annotation.OverridingMethodsMustInvokeSuper;
-
 public class EntityAbstract extends EntityCreature {
-   private static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
-   private static final Field FIELD_DATA;
    private static final Map<EntityTypes<?>, AttributeProvider> DEFAULT_ATTRIBUTES;
+   private static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
+   private static final int REMOVE_DELAY = 5;
+   private static final Field FIELD_DATA;
+
+   // Entity
+   public static DataWatcherObject<Byte> EFFECTS = DataWatcherRegistry.a.a(0);
+   public static DataWatcherObject<Integer> AIR = DataWatcherRegistry.b.a(1);
+   public static DataWatcherObject<Optional<IChatBaseComponent>> CUSTOM_NAME = DataWatcherRegistry.f.a(2);
+   public static DataWatcherObject<Boolean> CUSTOM_NAME_VISIBLE = DataWatcherRegistry.i.a(3);
+   public static DataWatcherObject<Boolean> IS_SILENT = DataWatcherRegistry.i.a(4);
+   public static DataWatcherObject<Boolean> NO_GRAVITY = DataWatcherRegistry.i.a(5);
+   public static DataWatcherObject<EntityPose> POSE = DataWatcherRegistry.s.a(6);
 
    // EntityLiving
    public static DataWatcherObject<Byte> HAND_STATE = DataWatcherRegistry.a.a(7);
@@ -80,11 +91,11 @@ public class EntityAbstract extends EntityCreature {
          throw new RuntimeException(reason);
       }
    }
-
-   private int removeCounter = 10;
-   private GameProfile profile;
-   private Property skin;
-   private int ping = -1;
+   private int ping = 1;
+   private int removeCounter;
+   
+   protected Property skin;
+   protected ScoreboardTeam team;
 
    static {
       try {
@@ -114,7 +125,6 @@ public class EntityAbstract extends EntityCreature {
 
    protected EntityAbstract(EntityTypes<? extends EntityAbstract> type, World world) {
       super(type, world);
-      this.profile = new GameProfile(getUniqueID(), getDisplayName().getText());
    }
 
    @Override
@@ -148,32 +158,19 @@ public class EntityAbstract extends EntityCreature {
    public void loadData(NBTTagCompound nbttagcompound) {
       super.loadData(nbttagcompound); 
       
-   
    }
 
-   public void setPing(int ping) {
-      this.ping = ping;
-      if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
-         return;
-      final Packet<?> packet = info(true);
-      Bukkit.getOnlinePlayers().forEach(player -> {
-         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
-         connection.sendPacket(packet);
-         connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
-      });
+   protected GameProfile getPseudoProfile(){
+      GameProfile profile = new GameProfile(getUniqueID(), getName());
+      
+      if(skin != null)
+         profile.getProperties().put(skin.getName(), skin);
+      return profile;
    }
 
-   public void setProperty(Property property) {
-      profile.getProperties().removeAll(property.getName());
-      profile.getProperties().put(property.getName(), property);
-      if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
-         return;
-      final Packet<?> packet = info(true);
-      Bukkit.getOnlinePlayers().forEach(player -> {
-         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
-         connection.sendPacket(packet);
-         connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
-      });
+   @Override
+   public String getName(){
+      return getCustomName().getText();
    }
 
    public void setName(String name) {
@@ -183,46 +180,43 @@ public class EntityAbstract extends EntityCreature {
    @Override
    public void setCustomName(IChatBaseComponent name) {
       super.setCustomName(name);
-      if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER)
-         return;
-      final PropertyMap properties = profile.getProperties();
-      profile = new GameProfile(getUniqueID(), getDisplayName().getText());
-      profile.getProperties().putAll(properties);
-      final Packet<?> packet = info(true);
-      Bukkit.getOnlinePlayers().forEach(player -> {
-         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
-         connection.sendPacket(packet);
-         connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
-      });
+   }
+
+   protected void resetCounter(){
+      removeCounter = REMOVE_DELAY;
    }
 
    @Override public void b(EntityPlayer player) {
+      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) try {
+         sendPackets(getSpawnPacket(), new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));                      
+      } catch (Throwable reason) { throw new RuntimeException(reason); }
+   }
+
+   public Packet<?> getSpawnPacket(){
+      try{
          final ByteBuf buffer = Unpooled.buffer();
-         if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) try {
-            final PacketDataSerializer data = new PacketDataSerializer(buffer);
-            data.d(getId());
-            data.a(getUniqueID());
-            data.writeDouble(locX());
-            data.writeDouble(locY());
-            data.writeDouble(locZ());
-            data.writeByte((byte)((int)(yaw * 256.0F / 360.0F)));
-            data.writeByte((byte)((int)(pitch * 256.0F / 360.0F)));
-            final Packet<?> packet = new PacketPlayOutNamedEntitySpawn();
-            packet.a(data); buffer.release();
-            Bukkit.getOnlinePlayers().forEach(oPlayer -> {          
-               PlayerConnection connection = ((CraftPlayer) oPlayer).getHandle().playerConnection;
-               connection.sendPacket(packet);
-               connection.sendPacket(new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));
-            });
-         } catch (Throwable reason) { throw new RuntimeException(reason); }
+         final PacketDataSerializer data = new PacketDataSerializer(buffer);
+         data.d(getId());
+         data.a(getUniqueID());
+         data.writeDouble(locX());
+         data.writeDouble(locY());
+         data.writeDouble(locZ());
+         data.writeByte((byte)((int)(yaw * 256.0F / 360.0F)));
+         data.writeByte((byte)((int)(pitch * 256.0F / 360.0F)));
+         final Packet<?> packet = new PacketPlayOutNamedEntitySpawn();
+         packet.a(data); buffer.release();
+         return packet;
+      } catch (Throwable reason) {throw new RuntimeException(reason);}
    }
 
    @Override
    public void tick() {
       if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER){
-         if(removeCounter == 0)
-            Bukkit.getOnlinePlayers().forEach(player -> ((CraftPlayer)player).getHandle().playerConnection.sendPacket(info(false)));
-         if(removeCounter >= 0)
+
+         if(removeCounter == 0){
+            sendPackets(getInfoPacket(EnumPlayerInfoAction.REMOVE_PLAYER));
+            removeCounter--;
+         }else if (removeCounter >= 0)
             removeCounter--;
       }  
          super.tick();
@@ -230,22 +224,34 @@ public class EntityAbstract extends EntityCreature {
 
    @Override public void c(EntityPlayer player) {
          if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) return;
-         player.playerConnection.sendPacket(info(false));
+         player.playerConnection.sendPacket(getInfoPacket(EnumPlayerInfoAction.REMOVE_PLAYER));
    }
 
    @Override public Packet<?> O() {
          if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER)
-            return info(true); 
+            return getInfoPacket(EnumPlayerInfoAction.ADD_PLAYER); 
          return new PacketPlayOutSpawnEntityLiving(this);
    }
 
+   
+
+   protected void sendPackets(Packet<?>...packets){
+      Bukkit.getOnlinePlayers().forEach(player -> {
+         PlayerConnection connection = ((CraftPlayer) player).getHandle().playerConnection;
+         for(Packet<?> packet : packets){
+            connection.sendPacket(packet);
+         }
+      });
+   }
+
    @SuppressWarnings("unchecked")
-   private PacketPlayOutPlayerInfo info(boolean add) {
+   protected PacketPlayOutPlayerInfo getInfoPacket(EnumPlayerInfoAction action) {
          try {
-            removeCounter = add ? 5 : 0;
-            final PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(add ? EnumPlayerInfoAction.ADD_PLAYER : EnumPlayerInfoAction.REMOVE_PLAYER);
+            if(action == EnumPlayerInfoAction.ADD_PLAYER)
+               resetCounter();
+            final PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(action);
             ((List<PacketPlayOutPlayerInfo.PlayerInfoData>) FIELD_DATA.get(packet)).add(packet.new PlayerInfoData(
-               profile, ping, EnumGamemode.SURVIVAL, getDisplayName()
+               getPseudoProfile(), ping, EnumGamemode.SURVIVAL, getCustomName()
             ));
             return packet;
          } catch (Throwable reason) { throw new RuntimeException(reason); }

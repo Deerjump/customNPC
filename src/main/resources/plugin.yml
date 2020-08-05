@@ -1,6 +1,6 @@
 main: io.github.deerjump.customnpc.Main
 name: customNPC
-version: 0.2
+version: 0.5
 author: Deerjump
 api-version: 1.16
 load: STARTUP

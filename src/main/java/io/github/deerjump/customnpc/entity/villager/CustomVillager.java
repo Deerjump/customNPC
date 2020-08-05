@@ -15,7 +15,7 @@ public class CustomVillager extends EntityAbstract {
       goalSelector.a(0, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0f));
       goalSelector.a(1, new PathfinderGoalRandomLookaround(this));
 
-      setName("fakeVillager");
+      setName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
    }
     
    @Override

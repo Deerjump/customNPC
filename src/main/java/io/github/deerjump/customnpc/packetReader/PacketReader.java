@@ -85,7 +85,7 @@ public class PacketReader {
    }
 
    public Object checkIncoming(Player sender, Object packet){
-      // System.out.println("Incoming: " + packet.getClass().getSimpleName());
+      System.out.println("Incoming: " + packet.getClass().getSimpleName());
 
       // if(packet.getClass().getSimpleName().contains("Entity"))
          // System.out.println("----------" + packet.getClass().getSimpleName() + "----------");
@@ -130,30 +130,6 @@ public class PacketReader {
       }
 
       return result;
-   }
-
-   @SuppressWarnings({"unused"})
-   private void setValue(Object instance, String name) {
-      try {
-         Field field = instance.getClass().getDeclaredField(name);
-         field.setAccessible(true);
-         field.set(instance,plugin.fakePlayer.getId());
-         field.setAccessible(false);
-      } catch (Exception e) {
-         e.printStackTrace();
-      } 
-   }
-
-   @SuppressWarnings({"unused"})
-   private void setInheritedValue(Object instance, String name){
-      try {
-         Field field = instance.getClass().getSuperclass().getDeclaredField(name);
-         field.setAccessible(true);
-         field.set(instance,plugin.fakePlayer.getId());
-         field.setAccessible(false);
-      } catch (Exception e) {
-         e.printStackTrace();
-      } 
    }
 
    @SuppressWarnings({"unused"})

@@ -1,11 +1,9 @@
 package io.github.deerjump.customnpc;
 
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,7 +22,6 @@ public class Main extends JavaPlugin implements Listener {
    
    public EntityTypes<FakePlayer> FAKE_PLAYER;
    public EntityTypes<CustomVillager> CUSTOM_VILLAGER;
-   public FakePlayer fakePlayer;
       
    @Override public void onLoad() {
       
