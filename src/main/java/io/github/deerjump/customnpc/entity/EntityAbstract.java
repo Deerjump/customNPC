@@ -29,6 +29,7 @@ import net.minecraft.server.v1_16_R1.BlockPosition;
 import net.minecraft.server.v1_16_R1.ChatComponentText;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
+import net.minecraft.server.v1_16_R1.Entity;
 import net.minecraft.server.v1_16_R1.EntityCreature;
 import net.minecraft.server.v1_16_R1.EntityInsentient;
 import net.minecraft.server.v1_16_R1.EntityPlayer;
@@ -41,19 +42,20 @@ import net.minecraft.server.v1_16_R1.MinecraftKey;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.Packet;
 import net.minecraft.server.v1_16_R1.PacketDataSerializer;
-import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R1.PacketPlayOutNamedEntitySpawn;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 import net.minecraft.server.v1_16_R1.PacketPlayOutSpawnEntityLiving;
 import net.minecraft.server.v1_16_R1.PlayerConnection;
+import net.minecraft.server.v1_16_R1.RegistryID;
 import net.minecraft.server.v1_16_R1.ResourceKey;
 import net.minecraft.server.v1_16_R1.ScoreboardTeam;
 import net.minecraft.server.v1_16_R1.World;
-
+//This is just here to suppress the warning in the static init
+@SuppressWarnings("unchecked")
 public class EntityAbstract extends EntityCreature {
    private static final Map<EntityTypes<?>, AttributeProvider> DEFAULT_ATTRIBUTES;
-   private static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
+   protected static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
    private static final int REMOVE_DELAY = 5;
    private static final Field FIELD_DATA;
 
@@ -77,7 +79,7 @@ public class EntityAbstract extends EntityCreature {
    
    // EntityInsentient
    public static DataWatcherObject<Byte> INSENTIENT = null;
-
+  
    static {
       try {
          final Field modifiers = Field.class.getDeclaredField("modifiers");
@@ -113,6 +115,18 @@ public class EntityAbstract extends EntityCreature {
       DEFAULT_ATTRIBUTES.put(type, DEFAULT_ATTRIBUTES.get(model));
       DEFAULT_ATTRIBUTES.put(type, EntityInsentient.p().a());
       return type;
+   }
+
+   public static void unregister(EntityTypes<Entity> entity){
+      try{
+         Field field = ENTITY_TYPE.getClass().getSuperclass().getDeclaredField("b");
+         field.setAccessible(true);
+         RegistryID<EntityTypes<?>> registry = (RegistryID<EntityTypes<?>>)field.get(ENTITY_TYPE);
+         
+
+      } catch(Exception e){
+         e.printStackTrace();
+      }
    }
 
    public static <Entity extends EntityAbstract> Entity spawn(EntityTypes<Entity> type, Location location) {
@@ -186,12 +200,6 @@ public class EntityAbstract extends EntityCreature {
       removeCounter = REMOVE_DELAY;
    }
 
-   @Override public void b(EntityPlayer player) {
-      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) try {
-         sendPackets(getSpawnPacket(), new PacketPlayOutEntityMetadata(getId(), getDataWatcher(), true));                      
-      } catch (Throwable reason) { throw new RuntimeException(reason); }
-   }
-
    public Packet<?> getSpawnPacket(){
       try{
          final ByteBuf buffer = Unpooled.buffer();
@@ -224,13 +232,15 @@ public class EntityAbstract extends EntityCreature {
 
    @Override public void c(EntityPlayer player) {
          if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) return;
+         System.out.println("Running 'c'");
          player.playerConnection.sendPacket(getInfoPacket(EnumPlayerInfoAction.REMOVE_PLAYER));
    }
 
    @Override public Packet<?> O() {
-         if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER)
-            return getInfoPacket(EnumPlayerInfoAction.ADD_PLAYER); 
-         return new PacketPlayOutSpawnEntityLiving(this);
+      System.out.println("Running 'O'");
+      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER)
+         return getInfoPacket(EnumPlayerInfoAction.ADD_PLAYER); 
+      return new PacketPlayOutSpawnEntityLiving(this);
    }
 
    
@@ -244,7 +254,6 @@ public class EntityAbstract extends EntityCreature {
       });
    }
 
-   @SuppressWarnings("unchecked")
    protected PacketPlayOutPlayerInfo getInfoPacket(EnumPlayerInfoAction action) {
          try {
             if(action == EnumPlayerInfoAction.ADD_PLAYER)

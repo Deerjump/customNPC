@@ -38,12 +38,16 @@ public class RightClickListener implements Listener {
       Player player = event.getPlayer();
       EntityAbstract npc = event.getClickedEntity();
 
-      if( player.isSneaking() && mapEditingNPC.containsKey(player.getName())){
+      if(player.isSneaking() && mapEditingNPC.containsKey(player.getName())){
          player.sendMessage(ChatColor.RED + "Editing Canceled!");
          mapEditingNPC.remove(player.getName());
-      } else {
+      } else if(player.isSneaking()) {
          mapEditingNPC.put(player.getName(), npc);
-         player.sendMessage(ChatColor.GOLD + "What would you like to edit?\n" + ChatColor.GREEN + "(name, prefix, suffix, skin)");
+         player.sendMessage("-----------------------------\n" +
+                           ChatColor.GOLD + "What would you like to edit?\n" + 
+                           ChatColor.GREEN + "(name, skin)\n" + 
+                           ChatColor.RED + "<Right click while sneaking to cancel!>\n" + 
+                           ChatColor.RESET + "-----------------------------");
       } 
    }
 
@@ -54,14 +58,19 @@ public class RightClickListener implements Listener {
       if(!mapEditingDetail.containsKey(player.getName()))
          return;
 
-      System.out.println("Editing Details");
+      // System.out.println("Editing Details");
 
       EntityAbstract npc = mapEditingNPC.get(player.getName());
-      System.out.println(event.getMessage());
       if( mapEditingDetail.get(player.getName()).equalsIgnoreCase("name")  || !(npc instanceof FakePlayer)){
-         System.out.println("Setting name");
-         npc.setName(event.getMessage());
-         mapEditingDetail.remove(player.getName());
+         // System.out.println("Setting name");
+         try{
+            player.sendMessage(ChatColor.GOLD + "Setting name to: " + ChatColor.GREEN + event.getMessage());
+            npc.setName(event.getMessage());
+            mapEditingDetail.remove(player.getName());
+         } catch (IllegalArgumentException e){
+            player.sendMessage(ChatColor.RED + "This name is too long! Must be " + ChatColor.GOLD + "16" 
+                              + ChatColor.RED + " Characters or less. \nProvided(" + ChatColor.GOLD + event.getMessage().length() + ChatColor.RED + ")" );         
+         }
          event.setCancelled(true);
          return;
       }
@@ -69,19 +78,9 @@ public class RightClickListener implements Listener {
       FakePlayer playerNpc = (FakePlayer) npc;
 
       switch(mapEditingDetail.get(player.getName())){
-         case "prefix": 
-            System.out.println("Setting prefix to: " + event.getMessage());
-            playerNpc.setPrefix(event.getMessage());     
-            System.out.println("removing player from mapEditingDetail");
-            mapEditingDetail.remove(player.getName());
-            break;
-         case "suffix":
-            System.out.println("Setting suffix to: " + event.getMessage());
-            playerNpc.setSuffix(event.getMessage());
-            mapEditingDetail.remove(player.getName());
-            break;
          case "skin":
-            System.out.println("Setting skin to: " + event.getMessage());
+            // System.out.println("Setting skin to: " + event.getMessage());
+            player.sendMessage(ChatColor.GOLD + "Setting skin to: " + ChatColor.GREEN + event.getMessage());
             playerNpc.setSkin(event.getMessage());
             mapEditingDetail.remove(player.getName());
             break;
@@ -99,8 +98,6 @@ public class RightClickListener implements Listener {
 
       switch(event.getMessage()){
          case "name":
-         case "prefix":
-         case "suffix":
          case "skin":
             player.sendMessage(ChatColor.GOLD + "What would you like to change " + ChatColor.GREEN + event.getMessage() + ChatColor.GOLD +  " to?");
             mapEditingDetail.put(player.getName(), event.getMessage());

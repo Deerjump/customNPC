@@ -1,22 +1,19 @@
 package io.github.deerjump.customnpc.entity.human;
 
+import static net.minecraft.server.v1_16_R1.IRegistry.ENTITY_TYPE;
+
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.ArrayList;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.authlib.properties.Property;
 
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_16_R1.scoreboard.CraftScoreboard;
-import org.bukkit.craftbukkit.v1_16_R1.util.CraftChatMessage;
-
 import io.github.deerjump.customnpc.entity.EntityAbstract;
-import net.minecraft.server.v1_16_R1.ChatComponentText;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
 import net.minecraft.server.v1_16_R1.EntityHuman;
+import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.EntityTypes;
 import net.minecraft.server.v1_16_R1.GenericAttributes;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
@@ -24,14 +21,11 @@ import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityDestroy;
 import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
 import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
-import net.minecraft.server.v1_16_R1.PacketPlayOutScoreboardTeam;
+import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 import net.minecraft.server.v1_16_R1.PathfinderGoalLookAtPlayer;
 import net.minecraft.server.v1_16_R1.PathfinderGoalRandomLookaround;
 import net.minecraft.server.v1_16_R1.PathfinderGoalRandomStroll;
-import net.minecraft.server.v1_16_R1.ScoreboardTeam;
-import net.minecraft.server.v1_16_R1.ScoreboardTeamBase.EnumNameTagVisibility;
 import net.minecraft.server.v1_16_R1.World;
-import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 
 public class FakePlayer extends EntityAbstract {
 
@@ -45,7 +39,6 @@ public class FakePlayer extends EntityAbstract {
 
    private static final double MOVE_SPEED = 0.2;
 
-   protected ScoreboardTeam team;
    private String simpleName;
 
    public FakePlayer(EntityTypes<FakePlayer> type, World world) {
@@ -58,12 +51,6 @@ public class FakePlayer extends EntityAbstract {
       goalSelector.a(2, new PathfinderGoalRandomLookaround(this));
       goalSelector.a(1, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0F));
       goalSelector.a(0, new PathfinderGoalRandomStroll(this, (double)2, 5));
-      this.team = new ScoreboardTeam(((CraftScoreboard) Bukkit.getScoreboardManager().getMainScoreboard()).getHandle(), getName());
-      this.team.setNameTagVisibility(EnumNameTagVisibility.ALWAYS);
-      
-      sendPackets(new PacketPlayOutScoreboardTeam(this.team, 0));
-      sendPackets(new PacketPlayOutScoreboardTeam(team, new ArrayList<String>(){{add(getName());}}, 3));
-
    }
 
    @Override protected void initDatawatcher() {
@@ -88,41 +75,12 @@ public class FakePlayer extends EntityAbstract {
       return this.simpleName;
    }
 
-   public IChatBaseComponent getPrefix(){
-      return this.team.getPrefix();
-   }
-
-   public IChatBaseComponent getSuffix(){
-      return this.team.getSuffix();
-   }
-
    @Override
    public void setName(String name) {
-      if(name == null)
-         return;
-      if(name.trim().length() > 16)
-         this.simpleName = name.split("(?<=\\G.{16})")[0]; //first 16 characters of name
+      if(name == null || name.length() > 16)
+         throw new IllegalArgumentException("Name must be 16 characters or less! Provided: " + name.length());
       else
          this.simpleName = name;
-      update();
-   }
-
-   public void setPrefix(String prefix){
-      this.setPrefix(new ChatComponentText(prefix));
-   }
-
-   public void setPrefix(IChatBaseComponent prefix){
-      this.team.setPrefix(prefix);
-      updateTeam();
-   }
-
-   public void setSuffix(String suffix){
-      this.setSuffix(new ChatComponentText(suffix));
-   }
-
-   public void setSuffix(IChatBaseComponent suffix){
-      this.team.setSuffix(suffix);
-      updateTeam();
    }
 
    @Override
@@ -153,13 +111,8 @@ public class FakePlayer extends EntityAbstract {
          updateProfile();
       } catch (Exception e) {
          e.printStackTrace();
+         return;
       }
-   }
-
-   public void update(){
-      updateProfile();
-      if(team != null)
-         updateTeam();
    }
 
    public void updateProfile(){
@@ -168,12 +121,6 @@ public class FakePlayer extends EntityAbstract {
       sendPackets(new PacketPlayOutEntityDestroy(this.getId()), playerInfo, getSpawnPacket(), metadata);
 
       resetCounter();
-   }
-
-   public void updateTeam(){
-      sendPackets(new PacketPlayOutScoreboardTeam(this.team, 1),
-                  new PacketPlayOutScoreboardTeam(this.team, 0),
-                  new PacketPlayOutScoreboardTeam(team, new ArrayList<String>(){{add(getName());}}, 3));
    }
 
    @Override
@@ -185,6 +132,12 @@ public class FakePlayer extends EntityAbstract {
    public void loadData(NBTTagCompound nbttagcompound) {
       super.loadData(nbttagcompound);
 
+   }
+
+   @Override public void b(EntityPlayer player) {
+      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER) try {
+         updateProfile();                    
+      } catch (Throwable reason) { throw new RuntimeException(reason); }
    }
 
    @Override public boolean isNoAI() {

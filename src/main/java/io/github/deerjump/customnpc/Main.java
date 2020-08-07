@@ -1,6 +1,8 @@
 package io.github.deerjump.customnpc;
 
+
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -24,10 +26,10 @@ public class Main extends JavaPlugin implements Listener {
    public EntityTypes<CustomVillager> CUSTOM_VILLAGER;
       
    @Override public void onLoad() {
-      
+     
    }
 
-   @Override public void onEnable() {
+   @Override public void onEnable() {     
       Bukkit.getPluginManager().registerEvents(new Join(this), this);
       Bukkit.getPluginManager().registerEvents(new RightClickListener(), this);
 

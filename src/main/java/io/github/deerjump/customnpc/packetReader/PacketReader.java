@@ -28,10 +28,10 @@ import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoActio
 public class PacketReader {
    private Channel channel;
    public static Map<UUID, Channel> channels = new HashMap<UUID, Channel>();
-   private Main plugin;
+   // private Main plugin;
 
    public PacketReader(Main plugin) {
-      this.plugin = plugin;
+      // this.plugin = plugin;
    }
 
    public void inject(Player player) {
