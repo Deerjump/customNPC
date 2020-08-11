@@ -13,13 +13,7 @@ public class CustomVillager extends EntityAbstract {
       super(type, world);
       
       goalSelector.a(0, new PathfinderGoalLookAtPlayer(this, EntityHuman.class, 8.0f));
-      goalSelector.a(1, new PathfinderGoalRandomLookaround(this));
+      goalSelector.a(1, new PathfinderGoalRandomLookaround(this)); 
 
-      setName("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-   }
-    
-   @Override
-   protected void initDatawatcher() {
-      super.initDatawatcher();
    }
 }

@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 
 import io.github.deerjump.customnpc.entity.EntityAbstract;
 import io.github.deerjump.customnpc.entity.human.FakePlayer;
@@ -20,23 +20,28 @@ public class RightClickListener implements Listener {
    HashMap<String, String> mapEditingDetail = new HashMap<>(); 
 
    @EventHandler
-   public void onRightClick(PlayerInteractAtEntityEvent event){
-
-
+   public void onRightClick(PlayerInteractEntityEvent event){
       Player player = event.getPlayer();
       Entity nmsEntity = ((CraftEntity)event.getRightClicked()).getHandle();
-      if(event.getHand().toString().equalsIgnoreCase("hand"))
+      if(event.getHand().toString().equalsIgnoreCase("off_hand"))
          return;
-      if(!(nmsEntity instanceof FakePlayer))
+
+      if(!(nmsEntity instanceof EntityAbstract))
          return;
 
       Bukkit.getPluginManager().callEvent(new PlayerInteractAtNPCEvent(player, (EntityAbstract)nmsEntity));
    }
-   
+
    @EventHandler
    public void onNPCInteract(PlayerInteractAtNPCEvent event){
       Player player = event.getPlayer();
       EntityAbstract npc = event.getClickedEntity();
+
+      if(!(npc instanceof FakePlayer)){
+         System.out.print("You're not a fake player!");
+         npc.setName("Not a fake player!");
+         return;
+      }
 
       if(player.isSneaking() && mapEditingNPC.containsKey(player.getName())){
          player.sendMessage(ChatColor.RED + "Editing Canceled!");

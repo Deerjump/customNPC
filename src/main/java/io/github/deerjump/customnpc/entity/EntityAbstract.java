@@ -5,14 +5,13 @@ import static net.minecraft.server.v1_16_R1.IRegistry.ENTITY_TYPE;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 
+import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 
 import org.bukkit.Bukkit;
@@ -21,30 +20,21 @@ import org.bukkit.craftbukkit.v1_16_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import net.minecraft.server.v1_16_R1.AttributeDefaults;
 import net.minecraft.server.v1_16_R1.AttributeProvider;
 import net.minecraft.server.v1_16_R1.BlockPosition;
 import net.minecraft.server.v1_16_R1.ChatComponentText;
 import net.minecraft.server.v1_16_R1.DataWatcherObject;
 import net.minecraft.server.v1_16_R1.DataWatcherRegistry;
-import net.minecraft.server.v1_16_R1.Entity;
 import net.minecraft.server.v1_16_R1.EntityCreature;
 import net.minecraft.server.v1_16_R1.EntityInsentient;
-import net.minecraft.server.v1_16_R1.EntityPlayer;
 import net.minecraft.server.v1_16_R1.EntityPose;
 import net.minecraft.server.v1_16_R1.EntityTypes;
-import net.minecraft.server.v1_16_R1.EnumGamemode;
 import net.minecraft.server.v1_16_R1.IChatBaseComponent;
 import net.minecraft.server.v1_16_R1.IRegistry;
 import net.minecraft.server.v1_16_R1.MinecraftKey;
 import net.minecraft.server.v1_16_R1.NBTTagCompound;
 import net.minecraft.server.v1_16_R1.Packet;
-import net.minecraft.server.v1_16_R1.PacketDataSerializer;
-import net.minecraft.server.v1_16_R1.PacketPlayOutNamedEntitySpawn;
-import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
-import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 import net.minecraft.server.v1_16_R1.PacketPlayOutSpawnEntityLiving;
 import net.minecraft.server.v1_16_R1.PlayerConnection;
 import net.minecraft.server.v1_16_R1.RegistryID;
@@ -56,8 +46,6 @@ import net.minecraft.server.v1_16_R1.World;
 public class EntityAbstract extends EntityCreature {
    private static final Map<EntityTypes<?>, AttributeProvider> DEFAULT_ATTRIBUTES;
    protected static final int ID_PLAYER = ENTITY_TYPE.a(EntityTypes.PLAYER);
-   private static final int REMOVE_DELAY = 5;
-   private static final Field FIELD_DATA;
 
    // Entity
    public static DataWatcherObject<Byte> EFFECTS = DataWatcherRegistry.a.a(0);
@@ -93,19 +81,6 @@ public class EntityAbstract extends EntityCreature {
          throw new RuntimeException(reason);
       }
    }
-   private int ping = 1;
-   private int removeCounter;
-   
-   protected Property skin;
-   protected ScoreboardTeam team;
-
-   static {
-      try {
-         (FIELD_DATA = PacketPlayOutPlayerInfo.class.getDeclaredField("b")).setAccessible(true);
-      } catch (Throwable reason) {
-         throw new RuntimeException(reason);
-      }
-   }
 
    public static <Entity extends EntityAbstract> EntityTypes<Entity> register(EntityTypes.b<Entity> entity, String name,
          EntityTypes<?> model) {
@@ -117,18 +92,62 @@ public class EntityAbstract extends EntityCreature {
       return type;
    }
 
-   public static void unregister(EntityTypes<Entity> entity){
+   public static void unregister(EntityTypes<? extends EntityAbstract> entity){
+      try{
+         Field field = ENTITY_TYPE.getClass().getSuperclass().getDeclaredField("c");
+         field.setAccessible(true);
+         
+         BiMap<MinecraftKey,Object> map = (BiMap<MinecraftKey, Object>) field.get(ENTITY_TYPE);
+         
+         while(map.inverse().containsKey(entity)){
+            System.out.println("Removing " + entity + " from c");
+            map.inverse().remove(entity);
+         }
+         field.setAccessible(false);
+      } catch(Exception e){
+         e.printStackTrace();
+      }
+
+      try{
+         Field field = ENTITY_TYPE.getClass().getSuperclass().getDeclaredField("bb");
+         field.setAccessible(true);
+         BiMap<ResourceKey<Object>, Object> map = (BiMap<ResourceKey<Object>, Object>) field.get(ENTITY_TYPE);
+         
+         while(map.inverse().containsKey(entity)){
+            System.out.println("Removing " + entity + " from bb");
+            map.inverse().remove(entity);
+         }
+      } catch(Exception e){
+         e.printStackTrace();
+      }
+
       try{
          Field field = ENTITY_TYPE.getClass().getSuperclass().getDeclaredField("b");
          field.setAccessible(true);
-         RegistryID<EntityTypes<?>> registry = (RegistryID<EntityTypes<?>>)field.get(ENTITY_TYPE);
-         
-
+         RegistryID<Object> registry = (RegistryID<Object>) field.get(ENTITY_TYPE);
+         Field field2 = registry.getClass().getDeclaredField("b");
+         field2.setAccessible(true);
+         Object[] objects = (Object[])field2.get(registry);
+         for(Object object : objects){
+            if(object != null && object.equals(entity)){
+               System.out.println("Removing " + object + "from b.b");
+               object = null;
+            }
+         }
+         Field field3 = registry.getClass().getDeclaredField("d");
+         field3.setAccessible(true);
+         Object[] objects2 = (Object[])field2.get(registry);
+         for(Object object : objects2){
+            if(object != null && object.equals(entity)){
+               System.out.println("Removing " + object + "from b.d");
+               object = null;
+            }
+         }
       } catch(Exception e){
          e.printStackTrace();
       }
    }
-
+   
    public static <Entity extends EntityAbstract> Entity spawn(EntityTypes<Entity> type, Location location) {
       final Entity entity = type.a(((CraftWorld) location.getWorld()).getHandle());
       entity.setPosition(location.getX(), location.getY(), location.getZ());
@@ -139,6 +158,7 @@ public class EntityAbstract extends EntityCreature {
 
    protected EntityAbstract(EntityTypes<? extends EntityAbstract> type, World world) {
       super(type, world);
+      setPersistent();
    }
 
    @Override
@@ -174,17 +194,11 @@ public class EntityAbstract extends EntityCreature {
       
    }
 
-   protected GameProfile getPseudoProfile(){
-      GameProfile profile = new GameProfile(getUniqueID(), getName());
-      
-      if(skin != null)
-         profile.getProperties().put(skin.getName(), skin);
-      return profile;
-   }
-
    @Override
    public String getName(){
-      return getCustomName().getText();
+      if(getCustomName() != null)
+         return getCustomName().getText();
+      return " ";
    }
 
    public void setName(String name) {
@@ -196,54 +210,9 @@ public class EntityAbstract extends EntityCreature {
       super.setCustomName(name);
    }
 
-   protected void resetCounter(){
-      removeCounter = REMOVE_DELAY;
-   }
-
-   public Packet<?> getSpawnPacket(){
-      try{
-         final ByteBuf buffer = Unpooled.buffer();
-         final PacketDataSerializer data = new PacketDataSerializer(buffer);
-         data.d(getId());
-         data.a(getUniqueID());
-         data.writeDouble(locX());
-         data.writeDouble(locY());
-         data.writeDouble(locZ());
-         data.writeByte((byte)((int)(yaw * 256.0F / 360.0F)));
-         data.writeByte((byte)((int)(pitch * 256.0F / 360.0F)));
-         final Packet<?> packet = new PacketPlayOutNamedEntitySpawn();
-         packet.a(data); buffer.release();
-         return packet;
-      } catch (Throwable reason) {throw new RuntimeException(reason);}
-   }
-
-   @Override
-   public void tick() {
-      if(ENTITY_TYPE.a(getEntityType()) == ID_PLAYER){
-
-         if(removeCounter == 0){
-            sendPackets(getInfoPacket(EnumPlayerInfoAction.REMOVE_PLAYER));
-            removeCounter--;
-         }else if (removeCounter >= 0)
-            removeCounter--;
-      }  
-         super.tick();
-   }
-
-   @Override public void c(EntityPlayer player) {
-         if (ENTITY_TYPE.a(getEntityType()) != ID_PLAYER) return;
-         System.out.println("Running 'c'");
-         player.playerConnection.sendPacket(getInfoPacket(EnumPlayerInfoAction.REMOVE_PLAYER));
-   }
-
-   @Override public Packet<?> O() {
-      System.out.println("Running 'O'");
-      if (ENTITY_TYPE.a(getEntityType()) == ID_PLAYER)
-         return getInfoPacket(EnumPlayerInfoAction.ADD_PLAYER); 
+   @Override public Packet<?> O() {         
       return new PacketPlayOutSpawnEntityLiving(this);
    }
-
-   
 
    protected void sendPackets(Packet<?>...packets){
       Bukkit.getOnlinePlayers().forEach(player -> {
@@ -252,17 +221,5 @@ public class EntityAbstract extends EntityCreature {
             connection.sendPacket(packet);
          }
       });
-   }
-
-   protected PacketPlayOutPlayerInfo getInfoPacket(EnumPlayerInfoAction action) {
-         try {
-            if(action == EnumPlayerInfoAction.ADD_PLAYER)
-               resetCounter();
-            final PacketPlayOutPlayerInfo packet = new PacketPlayOutPlayerInfo(action);
-            ((List<PacketPlayOutPlayerInfo.PlayerInfoData>) FIELD_DATA.get(packet)).add(packet.new PlayerInfoData(
-               getPseudoProfile(), ping, EnumGamemode.SURVIVAL, getCustomName()
-            ));
-            return packet;
-         } catch (Throwable reason) { throw new RuntimeException(reason); }
    }
 }
