@@ -2,46 +2,36 @@ package io.github.deerjump.customnpc.event;
 
 import java.util.HashMap;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPortalEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 
-import io.github.deerjump.customnpc.entity.EntityAbstract;
-import io.github.deerjump.customnpc.entity.human.FakePlayer;
-import net.minecraft.server.v1_16_R1.Entity;
+import io.github.deerjump.playernpcs.BaseHuman;
+import io.github.deerjump.playernpcs.BaseNpc;
+
 
 public class RightClickListener implements Listener {
-   HashMap<String, EntityAbstract> mapEditingNPC = new HashMap<>(); 
+   HashMap<String, BaseHuman> mapEditingNPC = new HashMap<>(); 
    HashMap<String, String> mapEditingDetail = new HashMap<>(); 
 
    @EventHandler
-   public void onRightClick(PlayerInteractEntityEvent event){
+   public void onNPCInteract(PlayerInteractEntityEvent event){
+      
       Player player = event.getPlayer();
-      Entity nmsEntity = ((CraftEntity)event.getRightClicked()).getHandle();
-      if(event.getHand().toString().equalsIgnoreCase("off_hand"))
-         return;
+      Entity entity = event.getRightClicked();
 
-      if(!(nmsEntity instanceof EntityAbstract))
-         return;
-
-      Bukkit.getPluginManager().callEvent(new PlayerInteractAtNPCEvent(player, (EntityAbstract)nmsEntity));
-   }
-
-   @EventHandler
-   public void onNPCInteract(PlayerInteractAtNPCEvent event){
-      Player player = event.getPlayer();
-      EntityAbstract npc = event.getClickedEntity();
-
-      if(!(npc instanceof FakePlayer)){
-         System.out.print("You're not a fake player!");
-         npc.setName("Not a fake player!");
+      if(!(entity instanceof BaseHuman) && entity instanceof BaseHuman){
+         System.out.print("You're not a player npc!");
+         ((BaseNpc)entity).setName("Not a player npc!");
          return;
       }
+
+      BaseHuman npc = (BaseHuman)entity;
 
       if(player.isSneaking() && mapEditingNPC.containsKey(player.getName())){
          player.sendMessage(ChatColor.RED + "Editing Canceled!");
@@ -65,8 +55,8 @@ public class RightClickListener implements Listener {
 
       // System.out.println("Editing Details");
 
-      EntityAbstract npc = mapEditingNPC.get(player.getName());
-      if( mapEditingDetail.get(player.getName()).equalsIgnoreCase("name")  || !(npc instanceof FakePlayer)){
+      BaseHuman npc = mapEditingNPC.get(player.getName());
+      if( mapEditingDetail.get(player.getName()).equalsIgnoreCase("name")){
          // System.out.println("Setting name");
          try{
             player.sendMessage(ChatColor.GOLD + "Setting name to: " + ChatColor.GREEN + event.getMessage());
@@ -80,13 +70,13 @@ public class RightClickListener implements Listener {
          return;
       }
 
-      FakePlayer playerNpc = (FakePlayer) npc;
+      
 
       switch(mapEditingDetail.get(player.getName())){
          case "skin":
             // System.out.println("Setting skin to: " + event.getMessage());
             player.sendMessage(ChatColor.GOLD + "Setting skin to: " + ChatColor.GREEN + event.getMessage());
-            playerNpc.setSkin(event.getMessage());
+            npc.setSkin(event.getMessage());
             mapEditingDetail.remove(player.getName());
             break;
       }
@@ -111,4 +101,10 @@ public class RightClickListener implements Listener {
       }
    }
 
+   @EventHandler
+   public void onDamage(EntityPortalEvent event){
+      if(event.getEntity() instanceof BaseHuman){
+         System.out.println("You're aweseome!");
+      }
+   }
 }

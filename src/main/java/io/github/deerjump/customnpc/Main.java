@@ -1,41 +1,35 @@
 package io.github.deerjump.customnpc;
 
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
-
 import org.bukkit.plugin.java.JavaPlugin;
 
-import io.github.deerjump.customnpc.entity.EntityAbstract;
-import io.github.deerjump.customnpc.entity.human.FakePlayer;
-import io.github.deerjump.customnpc.entity.villager.CustomVillager;
+import io.github.deerjump.customnpc.entity.CustomVillager;
+import io.github.deerjump.customnpc.entity.PlayerNPC;
 import io.github.deerjump.customnpc.event.Join;
 import io.github.deerjump.customnpc.event.RightClickListener;
-import net.minecraft.server.v1_16_R1.EntityTypes;
+import io.github.deerjump.playernpcs.NpcBase;
+import io.github.deerjump.playernpcs.HumanBase;
+import net.minecraft.server.v1_16_R2.EntityTypes;
 
-
-
-
-public class Main extends JavaPlugin implements Listener {
+public class Main extends JavaPlugin {
    
-   public EntityTypes<FakePlayer> FAKE_PLAYER;
+   public EntityTypes<PlayerNPC> FAKE_PLAYER;
    public EntityTypes<CustomVillager> CUSTOM_VILLAGER;
       
    @Override public void onLoad() {
-
      
    }
 
-   @Override public void onEnable() {     
+   @Override public void onEnable() {
       Bukkit.getPluginManager().registerEvents(new Join(this), this);
       Bukkit.getPluginManager().registerEvents(new RightClickListener(), this);
 
-      FAKE_PLAYER = EntityAbstract.register(FakePlayer::new, "player_npc", EntityTypes.PLAYER); 
-      CUSTOM_VILLAGER = EntityAbstract.register(CustomVillager::new, "npc_villager_npc", EntityTypes.VILLAGER);
+      FAKE_PLAYER = NpcBase.register(PlayerNPC::new, "player_npc", EntityTypes.PLAYER); 
+      CUSTOM_VILLAGER = NpcBase.register(CustomVillager::new, "npc_villager_npc", EntityTypes.VILLAGER);
    }
 
    @Override
@@ -49,7 +43,7 @@ public class Main extends JavaPlugin implements Listener {
       if(label.equalsIgnoreCase("createnpc")){
          
          Location location  = player.getLocation();
-         FakePlayer.spawn(FAKE_PLAYER, location);
+         HumanBase.spawn(FAKE_PLAYER, location);
       } 
 
       if(label.equalsIgnoreCase("createvillager")){
@@ -61,7 +55,7 @@ public class Main extends JavaPlugin implements Listener {
    }
 
    @Override public void onDisable() {
-      // EntityAbstract.unregister(FAKE_PLAYER);
-      // EntityAbstract.unregister(CUSTOM_VILLAGER);
+      // EntityBase.unregister(FAKE_PLAYER);
+      // EntityBase.unregister(CUSTOM_VILLAGER);
    }
 }

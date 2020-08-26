@@ -6,24 +6,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_16_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftEntity;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Entity;
 
 import io.github.deerjump.customnpc.Main;
-import io.github.deerjump.customnpc.entity.EntityAbstract;
-import io.github.deerjump.customnpc.entity.human.FakePlayer;
+import io.github.deerjump.playernpcs.NpcBase;
+import io.github.deerjump.playernpcs.HumanBase;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
-import net.minecraft.server.v1_16_R1.PacketPlayOutEntityMetadata;
-import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo;
-import net.minecraft.server.v1_16_R1.DataWatcher.Item;
-import net.minecraft.server.v1_16_R1.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
+import net.minecraft.server.v1_16_R2.PacketPlayOutEntityMetadata;
+import net.minecraft.server.v1_16_R2.PacketPlayOutPlayerInfo;
+import net.minecraft.server.v1_16_R2.DataWatcher.Item;
+import net.minecraft.server.v1_16_R2.PacketPlayOutPlayerInfo.EnumPlayerInfoAction;
 
 public class PacketReader {
    private Channel channel;
@@ -190,7 +189,7 @@ public class PacketReader {
       List<Entity> entityList = Bukkit.getServer().getWorlds().get(0).getEntities();
 
       Entity packetOwner = null;
-      FakePlayer fakePlayer = null;
+      HumanBase humanBase = null;
       int ownerId = (int) getValue(packet, "a");
       
       for(Entity entity : entityList){
@@ -198,11 +197,11 @@ public class PacketReader {
             packetOwner = entity;
       }
 
-      if(packetOwner instanceof EntityAbstract)
-         fakePlayer = (FakePlayer)packetOwner;
+      if(packetOwner instanceof NpcBase)
+         humanBase = (HumanBase)packetOwner;
 
-      if(fakePlayer != null)
-         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + fakePlayer.getClass().getSimpleName() + "-------------------------");
+      if(humanBase != null)
+         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + humanBase.getClass().getSimpleName() + "-------------------------");
       else
          System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + packetOwner.getClass().getSimpleName() + "-------------------------");
       PacketPlayOutEntityMetadata metadata = (PacketPlayOutEntityMetadata)packet;
@@ -218,17 +217,17 @@ public class PacketReader {
    private void readPlayerInfo(Object packet, Player sender){
       EnumPlayerInfoAction action = (EnumPlayerInfoAction)getValue(packet, "a");
       List<PacketPlayOutPlayerInfo.PlayerInfoData> infoList = (List<PacketPlayOutPlayerInfo.PlayerInfoData>) getValue(packet, "b");
-      FakePlayer fakePlayer = null;
+      HumanBase humanBase = null;
 
       List<Entity> entityList = Bukkit.getServer().getWorlds().get(0).getEntities();
 
       for(Entity entity : entityList){
-         if(entity instanceof EntityAbstract)
-            fakePlayer = (FakePlayer)entity;
+         if(entity instanceof NpcBase)
+            humanBase = (HumanBase)entity;
       }
 
-      if(fakePlayer != null)
-         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + fakePlayer.getClass().getSimpleName() + "-------------------------");
+      if(humanBase != null)
+         System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + humanBase.getClass().getSimpleName() + "-------------------------");
       else
          System.out.println("----------------" + packet.getClass().getSimpleName() + " : " + sender.getName() + "-------------------------");
       
