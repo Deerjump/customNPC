@@ -8,9 +8,9 @@ import io.github.deerjump.npclib.v1_16_R2.HumanBase;
 import net.minecraft.server.v1_16_R2.EntityTypes;
 import net.minecraft.server.v1_16_R2.World;
 
-public class PlayerNPC extends HumanBase implements InventoryHolder{
+public class PlayerNPC2 extends HumanBase implements InventoryHolder {
     
-   public PlayerNPC(EntityTypes<PlayerNPC> type, World world){
+   public PlayerNPC2(EntityTypes<? extends HumanBase> type, World world) {
       super(type, world);
       this.setInvulnerable(true);
       this.inventory = Bukkit.createInventory(this, 27, "NPC");
@@ -22,6 +22,5 @@ public class PlayerNPC extends HumanBase implements InventoryHolder{
    public Inventory getInventory() {
       return this.inventory;
    }
-
    
 }

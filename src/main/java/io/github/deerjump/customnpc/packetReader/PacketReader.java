@@ -13,8 +13,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Entity;
 
 import io.github.deerjump.customnpc.Main;
-import io.github.deerjump.playernpcs.NpcBase;
-import io.github.deerjump.playernpcs.HumanBase;
+import io.github.deerjump.npclib.v1_16_R2.NpcBase;
+import io.github.deerjump.npclib.v1_16_R2.HumanBase;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;

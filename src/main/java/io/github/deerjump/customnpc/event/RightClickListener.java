@@ -3,16 +3,21 @@ package io.github.deerjump.customnpc.event;
 import java.util.HashMap;
 
 import org.bukkit.ChatColor;
+import org.bukkit.craftbukkit.v1_16_R2.entity.CraftEntity;
+import org.bukkit.entity.Creature;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityPortalEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
-import io.github.deerjump.playernpcs.BaseHuman;
-import io.github.deerjump.playernpcs.BaseNpc;
+import io.github.deerjump.npclib.v1_16_R2.BaseHuman;
+import io.github.deerjump.npclib.v1_16_R2.BaseNpc;
 
 
 public class RightClickListener implements Listener {
@@ -20,16 +25,25 @@ public class RightClickListener implements Listener {
    HashMap<String, String> mapEditingDetail = new HashMap<>(); 
 
    @EventHandler
-   public void onNPCInteract(PlayerInteractEntityEvent event){
-      
+   public void onNPCInteract(PlayerInteractAtEntityEvent event){
+      if(event.getHand() == EquipmentSlot.HAND) return;
       Player player = event.getPlayer();
       Entity entity = event.getRightClicked();
 
-      if(!(entity instanceof BaseHuman) && entity instanceof BaseHuman){
-         System.out.print("You're not a player npc!");
-         ((BaseNpc)entity).setName("Not a player npc!");
-         return;
-      }
+      player.sendMessage("\n" + ((CraftEntity)entity).getHandle().getEntityType().toString());
+
+      if(entity instanceof LivingEntity)
+         player.sendMessage("LivingEntity");
+      if(entity instanceof Mob)
+         player.sendMessage("Mob");
+      if(entity instanceof Creature)
+         player.sendMessage("Creature");
+      if(entity instanceof BaseNpc)
+         player.sendMessage("BaseNpc");
+      if(entity instanceof BaseHuman)
+         player.sendMessage("BaseHuman");
+
+      player.sendMessage("\n" + ((CraftEntity)entity).getHandle().getClass().getSimpleName());
 
       BaseHuman npc = (BaseHuman)entity;
 
@@ -102,9 +116,7 @@ public class RightClickListener implements Listener {
    }
 
    @EventHandler
-   public void onDamage(EntityPortalEvent event){
-      if(event.getEntity() instanceof BaseHuman){
-         System.out.println("You're aweseome!");
-      }
+   public void onDamage(EntityDamageEvent event){
+      System.out.println(((CraftEntity)event.getEntity()).getHandle().getEntityType());
    }
 }

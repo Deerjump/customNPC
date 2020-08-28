@@ -1,6 +1,6 @@
 package io.github.deerjump.customnpc.entity;
 
-import io.github.deerjump.playernpcs.NpcBase;
+import io.github.deerjump.npclib.v1_16_R2.NpcBase;
 import net.minecraft.server.v1_16_R2.EntityTypes;
 import net.minecraft.server.v1_16_R2.World;
 
