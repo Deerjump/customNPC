@@ -31,7 +31,6 @@ public class Main extends JavaPlugin {
 
    @Override
    public void onEnable() {
-      System.out.println(getClass().getClassLoader());
       FAKE_PLAYER = NpcBase.register(PlayerNPC::new, "player_npc", EntityTypes.PLAYER);
       // FAKE_PLAYER2 = NpcBase.register(PlayerNPC2::new, "player_npc2", EntityTypes.PLAYER);
       CUSTOM_VILLAGER = NpcBase.register(CustomVillager::new, "villager_npc", EntityTypes.ZOMBIE);
