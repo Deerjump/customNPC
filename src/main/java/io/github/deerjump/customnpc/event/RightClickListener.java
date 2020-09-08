@@ -11,7 +11,6 @@ import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -115,8 +114,4 @@ public class RightClickListener implements Listener {
       }
    }
 
-   @EventHandler
-   public void onDamage(EntityDamageEvent event){
-      System.out.println(((CraftEntity)event.getEntity()).getHandle().getEntityType());
-   }
 }

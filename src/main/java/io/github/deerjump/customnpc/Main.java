@@ -2,13 +2,14 @@ package io.github.deerjump.customnpc;
 
 
 
-import net.minecraft.server.v1_16_R2.PacketPlayOutPlayerInfo;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.DragonFireball;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+
 import io.github.deerjump.customnpc.entity.CustomVillager;
 import io.github.deerjump.customnpc.entity.PlayerNPC;
 import io.github.deerjump.customnpc.entity.PlayerNPC2;
@@ -25,7 +26,7 @@ public class Main extends JavaPlugin {
 
    @Override
    public void onLoad() {
-      
+
    }
 
    @Override
@@ -46,7 +47,7 @@ public class Main extends JavaPlugin {
          return true;
 
       Player player = (Player) sender;   
-      
+      player.launchProjectile(DragonFireball.class);
       if(label.equalsIgnoreCase("createnpc")){
          
          Location location  = player.getLocation();
