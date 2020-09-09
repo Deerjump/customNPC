@@ -9,7 +9,8 @@ import net.minecraft.server.v1_16_R2.EntityTypes;
 import net.minecraft.server.v1_16_R2.World;
 
 public class PlayerNPC2 extends HumanBase implements InventoryHolder {
-    
+   //Testing multiple classes extending a Player-like NPC
+
    public PlayerNPC2(EntityTypes<? extends HumanBase> type, World world) {
       super(type, world);
       this.setInvulnerable(true);
